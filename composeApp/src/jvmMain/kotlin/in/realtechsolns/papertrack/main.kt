@@ -11,8 +11,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import papertrack.composeapp.generated.resources.Res
+import java.awt.BorderLayout
+import java.awt.Color
+import java.awt.image.BufferedImage
 import java.io.File
 import java.util.zip.ZipInputStream
+import javax.swing.JFrame
+import javax.swing.JPanel
+import javax.swing.SwingUtilities
+import javax.swing.WindowConstants
 
 
 fun main() {
@@ -31,28 +38,44 @@ fun main() {
             val company  = companyDao.getAll()
             println(company)
         }
+        copyFolderToUserSystem("Docs","Papertracks/Docs")
+        copyFolderToUserSystem("orgChart","Papertracks/orgChart")
 
-        copyDocsUserSystem()
+        //copyDocsUserSystem()
     }
-    application {
-        Window(
-            onCloseRequest = ::exitApplication,
-            title = "papertrack",
-        ) {
+  SwingUtilities.invokeLater {
 
-            App()
-        }
-    }
+      JFrame().apply {
+          defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
+          background = Color(Color.OPAQUE)
+          iconImage = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB)
+          setSize(800, 600)
+         val panel = DocsPanel(this)
+          add(panel, BorderLayout.SOUTH)
+          isVisible = true
+      }
+  }
+
+
+//    application {
+//        Window(
+//            onCloseRequest = ::exitApplication,
+//            title = "papertrack",
+//        ) {
+//
+//            App()
+//        }
+//    }
 }
 
-suspend fun copyDocsUserSystem() {
-    val userHome = System.getProperty("user.home")
-    val targetDir = File(userHome, "Papertracks/Docs")
 
-    // Create directory if it doesn't exist
+suspend fun copyFolderToUserSystem(folderName: String, targetSubPath: String) {
+    val userHome = System.getProperty("user.home")
+    val targetDir = File(userHome, targetSubPath)
+
     if (!targetDir.exists()) targetDir.mkdirs()
     try {
-        val bytes = Res.readBytes("files/Docs.zip")
+        val bytes = Res.readBytes("files/$folderName.zip")
         ZipInputStream(bytes.inputStream()).use { zis ->
             var entry = zis.nextEntry
             while (entry != null) {
@@ -61,7 +84,6 @@ suspend fun copyDocsUserSystem() {
                     newFile.mkdirs()
                 } else {
                     newFile.parentFile?.mkdirs()
-                    // Write to the USER directory (this is safe)
                     newFile.outputStream().use { output ->
                         zis.copyTo(output)
                     }
@@ -73,6 +95,5 @@ suspend fun copyDocsUserSystem() {
         println("Deployment successful to: ${targetDir.absolutePath}")
     } catch (e: Exception) {
         e.printStackTrace()
-
     }
 }
