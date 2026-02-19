@@ -15,13 +15,14 @@ import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.File
+import java.util.prefs.Preferences
 import java.util.zip.ZipInputStream
 import javax.swing.JFrame
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
 import javax.swing.WindowConstants
 
-
+lateinit var prefs: Preferences
 fun main() {
 
     val scope = CoroutineScope(Dispatchers.IO)
@@ -43,15 +44,19 @@ fun main() {
 
         //copyDocsUserSystem()
     }
+
+    prefs = Preferences.userRoot().node("MyAppPreferences")
+    LuceneManager.initialize()
   SwingUtilities.invokeLater {
 
       JFrame().apply {
           defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
           background = Color(Color.OPAQUE)
-          iconImage = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB)
+         // iconImage = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB)
           setSize(800, 600)
+          jMenuBar = TopMenu(prefs,this)
          val panel = DocsPanel(this)
-          add(panel, BorderLayout.SOUTH)
+          add(panel, BorderLayout.NORTH)
           isVisible = true
       }
   }

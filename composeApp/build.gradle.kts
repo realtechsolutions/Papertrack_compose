@@ -25,6 +25,16 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.sqlite.bundled)
+            implementation(libs.poi.core)
+            implementation(libs.poi.ooxml)
+            implementation(libs.log4j.core)
+            implementation(libs.lucene.core)
+            implementation(libs.lucene.queryparser)
+
+
+
+
+
 
         }
         commonTest.dependencies {

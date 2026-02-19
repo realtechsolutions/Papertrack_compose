@@ -38,8 +38,8 @@ class DocsPanel(frame:JFrame) : JPanel() {
         tv.font = Font("SansSerif", Font.PLAIN, 16)
         tv.isRootVisible = false
         tv.showsRootHandles = true
-//        val treepopup = TreePopup(tv)
-//        val treepopupFile = TreePopupFile(tv,frame)
+       val treepopup = TreePopup(tv)
+       val treepopupFile = TreePopupFile(tv,frame)
         tv.isOpaque = true
         // Add mouse listener for popup and file opening
         tv.addMouseListener(object : MouseAdapter() {
@@ -49,25 +49,27 @@ class DocsPanel(frame:JFrame) : JPanel() {
                     openFile(it.toString(), folder)
                 }
             }
-//            override fun mouseReleased(e: MouseEvent?) {
-//                super.mouseReleased(e)
-//                if (e != null) {
-//                    val path = tv.getPathForLocation(e.x, e.y)
-//                    if (path != null) {
-//                        tv.selectionPath = path
-//                    }
-//                    val node = tv.lastSelectedPathComponent as? DefaultMutableTreeNode
-//                    selectedNode = node
-//                    if (e.isPopupTrigger() && searchFile(selectedNode.toString(), folder)?.isFile == true)
-//                    { treepopupFile.show(e.component, e.x, e.y)
-//                    }
-//                    else if
-//                                 (e.isPopupTrigger() &&  searchFolder(selectedNode.toString(), folder)?.isDirectory == true)
-//                    {
-//                        treepopup.show(e.component, e.x, e.y)
-//                    }
-//                }
-//            }
+            // on Windows make mouseReleased
+            override fun mousePressed(e: MouseEvent?) {
+                println("right clik called")
+                super.mouseReleased(e)
+                if (e != null) {
+                    val path = tv.getPathForLocation(e.x, e.y)
+                    if (path != null) {
+                        tv.selectionPath = path
+                    }
+                    val node = tv.lastSelectedPathComponent as? DefaultMutableTreeNode
+                    selectedNode = node
+                    if (e.isPopupTrigger && searchFile(selectedNode.toString(), folder)?.isFile == true)
+                    { treepopupFile.show(e.component, e.x, e.y)
+                    }
+                    else if
+                                 (e.isPopupTrigger &&  searchFolder(selectedNode.toString(), folder)?.isDirectory == true)
+                    {
+                        treepopup.show(e.component, e.x, e.y)
+                    }
+                }
+            }
         })
         val scrollPane = JScrollPane(tv)
         scrollPane.isOpaque = true
