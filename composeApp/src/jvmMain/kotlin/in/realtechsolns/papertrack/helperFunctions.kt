@@ -1,6 +1,28 @@
 package `in`.realtechsolns.papertrack
 
 
+
+import androidx.compose.foundation.ContextMenuArea
+import androidx.compose.foundation.ContextMenuItem
+import androidx.compose.foundation.ContextMenuState
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.unit.dp
 import org.apache.poi.util.Units
 import org.apache.poi.xwpf.model.XWPFHeaderFooterPolicy
 import org.apache.poi.xwpf.usermodel.XWPFDocument
@@ -21,21 +43,100 @@ import javax.swing.JTextArea
 import javax.swing.JTextField
 import javax.swing.tree.DefaultMutableTreeNode
 
+var folder: File = File(userHome,"Papertracks/Docs/Docs")
+
+fun buildFileTree(directory: File): FileNode {
+    val node = FileNode(file = directory)
+    if (directory.isDirectory) {
+        directory.listFiles()
+            ?.sortedWith(compareBy({ it.isFile }, { it.name })) // folders first
+            ?.forEach { child ->
+                node.children.add(buildFileTree(child))
+            }
+    }
+    return node
+}
+
+
+
+
+
 
 val rootnode = DefaultMutableTreeNode(folder.name ?: "")
 val desktop: Desktop? = Desktop.getDesktop()
 
-fun createTree(folder: File, root: DefaultMutableTreeNode = rootnode): DefaultMutableTreeNode {
-    folder.listFiles()?.forEach {
-        //if (it.name == ".git") return@forEach
-        val subnode = DefaultMutableTreeNode(it.name.substringBeforeLast('.'))
-        root.add(subnode)
-        if (folder.isDirectory) {
-            createTree(it, subnode)
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun FileTreeItem(file: File) {
+    val state = remember { ContextMenuState() }
+    // 1. THE "MEMORY"
+    // This variable is unique to every single file/folder on your screen.
+    // If it's true, we show what's inside. If false, we hide it.
+    var isExpanded by remember { mutableStateOf(false) }
+
+    // 2. THE VERTICAL STACK
+    // We use a Column so that the folder name stays on top,
+    // and all its children appear directly underneath it.
+//    ContextMenuArea(items = {
+//        listOf(
+//            ContextMenuItem("Option 1") { println("Option 1 clicked") },
+//            ContextMenuItem("Option 2") { println("Option 2 clicked") },
+//            ContextMenuItem("Delete") { println("Delete clicked") }
+//        )
+//    },state = state,modifier = Modifier) {
+
+        Column(modifier = Modifier.padding(start = 16.dp)) {
+
+
+            // 3. THE "LABEL" ROW
+            // This is what the user actually sees and clicks on.
+            Row(
+                modifier = Modifier
+                    .combinedClickable(
+                        onClick = {
+                            if (file.isDirectory) {
+                                isExpanded = !isExpanded
+                            }
+                        },
+                        onDoubleClick = {
+                            if (file.isFile) {
+                                try {
+                                    Desktop.getDesktop().open(file)
+                                } catch (e: Exception) {
+                                    println("Could not open file: ${e.message}")
+                                }
+                            }
+
+                        }
+
+                    )
+                    .onPointerEvent(PointerEventType.Press) { if (it.buttons.isSecondaryPressed) { println("Secondary pressed") } }
+
+                    //.clickable { isExpanded = !isExpanded } // Toggles the "memory" above
+                    .fillMaxWidth()
+                    .padding(4.dp)
+            ) {
+                // Simple logic: If it's a directory, show a folder icon; else a file icon.
+                Text(if (file.isDirectory) "📁 " else "📄 ")
+                Text(file.name)
+            }
+
+            // 4. THE RECURSION (THE "DEEP DIVE")
+            // This ONLY runs if the user clicked the folder (isExpanded == true).
+            if (isExpanded && file.isDirectory) {
+
+                // Look inside the physical folder on your hard drive
+                val children = file.listFiles()
+
+                children?.forEach { child ->
+                    // This is the magic part: The function calls ITSELF
+                    // for every file it found inside.
+                    FileTreeItem(child)
+                }
+            }
         }
     }
-    return root
-}
+
 
 
 

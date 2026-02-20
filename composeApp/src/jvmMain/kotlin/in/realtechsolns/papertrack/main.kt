@@ -47,30 +47,30 @@ fun main() {
 
     prefs = Preferences.userRoot().node("MyAppPreferences")
     LuceneManager.initialize()
-  SwingUtilities.invokeLater {
-
-      JFrame().apply {
-          defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
-          background = Color(Color.OPAQUE)
-         // iconImage = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB)
-          setSize(800, 600)
-          jMenuBar = TopMenu(prefs,this)
-         val panel = DocsPanel(this)
-          add(panel, BorderLayout.NORTH)
-          isVisible = true
-      }
-  }
-
-
-//    application {
-//        Window(
-//            onCloseRequest = ::exitApplication,
-//            title = "papertrack",
-//        ) {
+//  SwingUtilities.invokeLater {
 //
-//            App()
-//        }
-//    }
+//      JFrame().apply {
+//          defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
+//          background = Color(Color.OPAQUE)
+//         // iconImage = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB)
+//          setSize(800, 600)
+//          jMenuBar = TopMenu(prefs,this)
+//         val panel = DocsPanel(this)
+//          add(panel, BorderLayout.NORTH)
+//          isVisible = true
+//      }
+//  }
+
+
+    application {
+        Window(
+            onCloseRequest = ::exitApplication,
+            title = "Papertrack",
+        ) {
+
+            App()
+        }
+    }
 }
 
 
