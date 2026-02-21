@@ -1,0 +1,41 @@
+package `in`.realtechsolns.papertrack
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.window.FrameWindowScope
+import androidx.compose.ui.window.MenuBar
+
+@Composable
+fun FrameWindowScope.AppMenuBar(
+    onFolderOpen: () -> Unit,
+    onRefresh: () -> Unit,
+    onExit: () -> Unit
+) {
+    MenuBar {
+        Menu(" Documents    ", mnemonic = 'F') {
+//            Item("Open Folder", onClick = onFolderOpen)
+//            Separator()
+//            Item("Exit", onClick = onExit)
+        }
+
+        Menu(" Org Chart    ") {
+            Item("View", onClick = onRefresh)
+            Item("Update", onClick = onRefresh)
+        }
+
+        Menu(" Search   ") {
+            Item("Search by document no.", onClick = onRefresh)
+            Item("Search by text", onClick = onRefresh)
+        }
+
+        Menu(" Help     ") {
+            Item("Help", onClick = onRefresh)
+            Item("Help2", onClick = onRefresh)
+        }
+
+        Menu("Ask questions     ") {
+            Item("Ask ", onClick = onRefresh)
+
+        }
+
+    }
+}

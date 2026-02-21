@@ -11,7 +11,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.CursorDropdownMenu
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Text
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -73,6 +76,7 @@ fun FileTreeItem(file: File) {
     // This variable is unique to every single file/folder on your screen.
     // If it's true, we show what's inside. If false, we hide it.
     var isExpanded by remember { mutableStateOf(false) }
+//    var selectedFile :File? = null
 
     // 2. THE VERTICAL STACK
     // We use a Column so that the folder name stays on top,
@@ -86,7 +90,26 @@ fun FileTreeItem(file: File) {
 //    },state = state,modifier = Modifier) {
 
         Column(modifier = Modifier.padding(start = 16.dp)) {
-
+            var isMenuVisible by remember {mutableStateOf (false)}
+            CursorDropdownMenu(
+                expanded = isMenuVisible,
+                onDismissRequest = { isMenuVisible = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Update File") },
+                    onClick = { /* handle */ isMenuVisible = false
+                    println ("${file.name}  Updated")
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Revision History") },
+                    onClick = { /* handle */ isMenuVisible = false }
+                )
+                DropdownMenuItem(
+                    text = { Text("Previous Versions") },
+                    onClick = { /* handle */ isMenuVisible = false }
+                )
+            }
 
             // 3. THE "LABEL" ROW
             // This is what the user actually sees and clicks on.
@@ -110,7 +133,13 @@ fun FileTreeItem(file: File) {
                         }
 
                     )
-                    .onPointerEvent(PointerEventType.Press) { if (it.buttons.isSecondaryPressed) { println("Secondary pressed") } }
+                    .onPointerEvent(PointerEventType.Press) { if (it.buttons.isSecondaryPressed) {
+
+                       if (file.isFile)  {
+                          //selectedFile = file
+                           //println ("${selectedFile.name } debugs")
+                                  isMenuVisible = !isMenuVisible }
+                        println("Secondary pressed") } }
 
                     //.clickable { isExpanded = !isExpanded } // Toggles the "memory" above
                     .fillMaxWidth()

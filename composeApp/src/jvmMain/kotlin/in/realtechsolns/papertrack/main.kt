@@ -67,7 +67,13 @@ fun main() {
             onCloseRequest = ::exitApplication,
             title = "Papertrack",
         ) {
+               AppMenuBar(
+                   onFolderOpen = { /* logic */ },
+                   onRefresh = { /* logic */ },
+                   onExit = ::exitApplication
 
+
+               )
             App()
         }
     }
