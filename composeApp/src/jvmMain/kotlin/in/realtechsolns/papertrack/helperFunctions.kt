@@ -1,7 +1,6 @@
 package `in`.realtechsolns.papertrack
 
 
-
 import androidx.compose.foundation.ContextMenuArea
 import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.ContextMenuState
@@ -22,10 +21,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentDataType.Companion.Date
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.unit.dp
+import org.apache.poi.hpsf.Date
 import org.apache.poi.util.Units
 import org.apache.poi.xwpf.model.XWPFHeaderFooterPolicy
 import org.apache.poi.xwpf.usermodel.XWPFDocument
@@ -37,6 +38,9 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.RandomAccessFile
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import javax.swing.JFileChooser
 import javax.swing.JFrame
 import javax.swing.JLabel
@@ -45,130 +49,147 @@ import javax.swing.JPanel
 import javax.swing.JTextArea
 import javax.swing.JTextField
 import javax.swing.tree.DefaultMutableTreeNode
-
-var folder: File = File(userHome,"Papertracks/Docs/Docs")
-
-fun buildFileTree(directory: File): FileNode {
-    val node = FileNode(file = directory)
-    if (directory.isDirectory) {
-        directory.listFiles()
-            ?.sortedWith(compareBy({ it.isFile }, { it.name })) // folders first
-            ?.forEach { child ->
-                node.children.add(buildFileTree(child))
-            }
-    }
-    return node
-}
-
-
-
-
-
-
-val rootnode = DefaultMutableTreeNode(folder.name ?: "")
+val userHome: String? = System.getProperty("user.home")
+var folder: File = File(userHome, "Papertracks/Docs/Docs")
+val orgChart :File = File(userHome, "Papertracks/orgChart/orgChart/index.html")
 val desktop: Desktop? = Desktop.getDesktop()
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun FileTreeItem(file: File) {
-    val state = remember { ContextMenuState() }
-    // 1. THE "MEMORY"
-    // This variable is unique to every single file/folder on your screen.
-    // If it's true, we show what's inside. If false, we hide it.
-    var isExpanded by remember { mutableStateOf(false) }
-//    var selectedFile :File? = null
+fun FileTreeItem(file: File, initialExpanded: Boolean = false) {
+    var isExpanded by remember { mutableStateOf(initialExpanded) }
 
-    // 2. THE VERTICAL STACK
-    // We use a Column so that the folder name stays on top,
-    // and all its children appear directly underneath it.
-//    ContextMenuArea(items = {
-//        listOf(
-//            ContextMenuItem("Option 1") { println("Option 1 clicked") },
-//            ContextMenuItem("Option 2") { println("Option 2 clicked") },
-//            ContextMenuItem("Delete") { println("Delete clicked") }
-//        )
-//    },state = state,modifier = Modifier) {
+    Column(modifier = Modifier.padding(start = 16.dp)) {
+        var isMenuVisible by remember { mutableStateOf(false) }
+        CursorDropdownMenu(
+            expanded = isMenuVisible,
+            onDismissRequest = { isMenuVisible = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("Update File") },
+                onClick = { /* handle */ isMenuVisible = false
+                    println("${file.name}  Updated")
+                    updateFile(file)
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("Revision History") },
+                onClick = { /* handle */ isMenuVisible = false }
+            )
+            DropdownMenuItem(
+                text = { Text("Previous Versions") },
+                onClick = { /* handle */ isMenuVisible = false }
+            )
+        }
 
-        Column(modifier = Modifier.padding(start = 16.dp)) {
-            var isMenuVisible by remember {mutableStateOf (false)}
-            CursorDropdownMenu(
-                expanded = isMenuVisible,
-                onDismissRequest = { isMenuVisible = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text("Update File") },
-                    onClick = { /* handle */ isMenuVisible = false
-                    println ("${file.name}  Updated")
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("Revision History") },
-                    onClick = { /* handle */ isMenuVisible = false }
-                )
-                DropdownMenuItem(
-                    text = { Text("Previous Versions") },
-                    onClick = { /* handle */ isMenuVisible = false }
-                )
-            }
-
-            // 3. THE "LABEL" ROW
-            // This is what the user actually sees and clicks on.
-            Row(
-                modifier = Modifier
-                    .combinedClickable(
-                        onClick = {
-                            if (file.isDirectory) {
-                                isExpanded = !isExpanded
+        Row(
+            modifier = Modifier
+                .combinedClickable(
+                    onClick = {
+                        if (file.isDirectory) {
+                            isExpanded = !isExpanded
+                        }
+                    },
+                    onDoubleClick = {
+                        if (file.isFile) {
+                            try {
+                                Desktop.getDesktop().open(file)
+                            } catch (e: Exception) {
+                                println("Could not open file: ${e.message}")
                             }
-                        },
-                        onDoubleClick = {
-                            if (file.isFile) {
-                                try {
-                                    Desktop.getDesktop().open(file)
-                                } catch (e: Exception) {
-                                    println("Could not open file: ${e.message}")
-                                }
-                            }
-
                         }
 
-                    )
-                    .onPointerEvent(PointerEventType.Press) { if (it.buttons.isSecondaryPressed) {
+                    }
 
-                       if (file.isFile)  {
-                          //selectedFile = file
-                           //println ("${selectedFile.name } debugs")
-                                  isMenuVisible = !isMenuVisible }
-                        println("Secondary pressed") } }
+                )
+                .onPointerEvent(PointerEventType.Press) {
+                    if (it.buttons.isSecondaryPressed) {
 
-                    //.clickable { isExpanded = !isExpanded } // Toggles the "memory" above
-                    .fillMaxWidth()
-                    .padding(4.dp)
-            ) {
-                // Simple logic: If it's a directory, show a folder icon; else a file icon.
-                Text(if (file.isDirectory) "📁 " else "📄 ")
-                Text(file.name)
-            }
-
-            // 4. THE RECURSION (THE "DEEP DIVE")
-            // This ONLY runs if the user clicked the folder (isExpanded == true).
-            if (isExpanded && file.isDirectory) {
-
-                // Look inside the physical folder on your hard drive
-                val children = file.listFiles()
-
-                children?.forEach { child ->
-                    // This is the magic part: The function calls ITSELF
-                    // for every file it found inside.
-                    FileTreeItem(child)
+                        if (file.isFile) {
+                            isMenuVisible = !isMenuVisible
+                        }
+                    }
                 }
+
+
+                .fillMaxWidth()
+                .padding(4.dp)
+        ) {
+            // Simple logic: If it's a directory, show a folder icon; else a file icon.
+            Text(if (file.isDirectory) "📁 " else "📄 ")
+            val displayName = if (file.isDirectory) {
+                file.name
+            } else {
+                file.name.substringBeforeLast(".", missingDelimiterValue = file.name)
+            }
+            Text(displayName)
+        }
+
+        // 4. THE RECURSION (THE "DEEP DIVE")
+        // This ONLY runs if the user clicked the folder (isExpanded == true).
+        if (isExpanded && file.isDirectory) {
+
+            // Look inside the physical folder on your hard drive
+            val children = file.listFiles()
+
+            children?.forEach { child ->
+                // This is the magic part: The function calls ITSELF
+                // for every file it found inside.
+                FileTreeItem(child)
             }
         }
     }
+}
 
+private fun updateFile(file: File) {
+    val currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
 
+    try {
+        RandomAccessFile(file, "rw").close()
+    } catch (e: IOException) {
+        JOptionPane.showMessageDialog(
+            null,
+            "Please close the file before updating.",
+            "File Open",
+            JOptionPane.WARNING_MESSAGE
+        )
+        return
+    }
 
+    val revDateRegex = Regex("Revision Date: \\d{2}/\\d{2}/\\d{4}")
+    val revNumberRegex = Regex("Revision [Nn]umber: (\\d+)")
+    var newRevNumber = 1
 
+    FileInputStream(file).use { inStream ->
+        val doc = XWPFDocument(inStream)
+        val header = doc.headerFooterPolicy?.defaultHeader ?: return
+
+        for (paragraph in header.paragraphs) {
+            val runs = paragraph.runs
+            if (runs.isEmpty()) continue
+
+            val fullText = runs.joinToString("") { it.text() }
+            if (!fullText.contains("Revision", ignoreCase = true)) continue
+
+            val revMatch = revNumberRegex.find(fullText)
+            val currentRev = revMatch?.groupValues?.get(1)?.toIntOrNull() ?: 0
+            newRevNumber = currentRev + 1
+
+            var updatedText = revDateRegex.replace(fullText, "Revision Date: $currentDate")
+            updatedText = revNumberRegex.replace(updatedText, "Revision Number: ${String.format("%02d", newRevNumber)}")
+
+            runs[0].setText(updatedText, 0)
+            for (i in 1 until runs.size) {
+                runs[i].setText("", 0)
+            }
+        }
+
+        FileOutputStream(file).use { outStream ->
+            doc.write(outStream)
+        }
+    }
+    println("$newRevNumber updated")
+}
 
 
 fun openFile(name: String, folder: File) {
@@ -232,6 +253,7 @@ fun addFile(folderName: String, fileName: String, topFolder: File? = folder) {
         }
     }
 }
+
 //this function takes a folder and file name string and creates a word doc object . It creates a file in folder
 // given as parameter in create File function and the create output stream of this file and finally write
 // doc to this file
@@ -271,10 +293,12 @@ fun createFile(folder: File, fileName: String) {
         doc.write(out)
     }
 }
+
 // function to get user input through joption pane
 fun getUserInput(prompt: String): String? {
     return JOptionPane.showInputDialog(null, prompt)
 }
+
 fun getUserInputs(prompt1: String, prompt2: String, prompt3: String, prompt4: String): List<String?>? {
     val field1 = JTextField(20)
     val field2 = JTextField(20)
@@ -328,6 +352,7 @@ fun openFolderPicker(): String? {
         null
     }
 }
+
 fun searchFile(name: String, folder: File): File? {
     val list = folder.listFiles() ?: return null
     for (file in list) {
@@ -345,6 +370,7 @@ fun searchFile(name: String, folder: File): File? {
     }
     return null
 }
+
 fun searchFolder(name: String, folder: File): File? {
     val list = folder.listFiles() ?: return null
     for (file in list) {

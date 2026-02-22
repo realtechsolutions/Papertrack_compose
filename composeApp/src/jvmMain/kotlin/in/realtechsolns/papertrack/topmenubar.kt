@@ -18,8 +18,8 @@ fun FrameWindowScope.AppMenuBar(
         }
 
         Menu(" Org Chart    ") {
-            Item("View", onClick = onRefresh)
-            Item("Update", onClick = onRefresh)
+            Item("View", onClick = { desktop?.open(orgChart) })
+            Item("Edit ", onClick = onRefresh)
         }
 
         Menu(" Search   ") {

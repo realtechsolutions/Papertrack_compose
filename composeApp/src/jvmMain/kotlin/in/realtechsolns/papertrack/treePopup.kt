@@ -74,7 +74,7 @@ class TreePopupFile(val tree: JTree?, frame: JFrame) : JPopupMenu() {
         }
 
         update.addActionListener {
-            updateFile()
+           // updateFile()
             JOptionPane.showMessageDialog(
                 null,
                 "File updated successfully",
@@ -123,104 +123,104 @@ class TreePopupFile(val tree: JTree?, frame: JFrame) : JPopupMenu() {
         tree?.requestFocusInWindow()
     }
 
-    private fun updateFile() {
-        val currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-        val file = folder?.let { searchFile(selectedNode.toString(), it) } ?: return
-        selectedFile = file
-        var newRevNumber = 1
-        try {
-            RandomAccessFile(file, "rw").close()
-        } catch (e: IOException) {
-            JOptionPane.showMessageDialog(
-                null,
-                "Please close the file before updating.",
-                "File Open",
-                JOptionPane.WARNING_MESSAGE
-            )
-            return
-        }
-        FileInputStream(file).use { inStream ->
-            val doc = XWPFDocument(inStream)
-            val headerPolicy = doc.headerFooterPolicy
-            val header = headerPolicy.defaultHeader ?: return
-
-            // First, find the revision number and build complete text
-            val fullHeaderText = StringBuilder()
-            for (paragraph in header.paragraphs) {
-                for (run in paragraph.runs) {
-                    fullHeaderText.append(run.text())
-                }
-            }
-            // Find and update the revision number first
-            val revNumberRegex = Regex("Revision [Nn]umber: (\\d+)")
-            val revNumberMatch = revNumberRegex.find(fullHeaderText.toString())
-            val currentRevNumber = revNumberMatch?.groupValues?.get(1)?.toIntOrNull() ?: 0
-            newRevNumber = currentRevNumber + 1
-            // Now process each paragraph carefully
-            for (paragraph in header.paragraphs) {
-                val runs = paragraph.runs
-                val paragraphText = StringBuilder()
-                for (run in runs) {
-                    paragraphText.append(run.text())
-                }
-                var updatedText = paragraphText.toString()
-                // Only update if this paragraph contains revision information
-                if (updatedText.contains("Revision", ignoreCase = true)) {
-                    val revDateRegex = Regex("Revision Date: \\d{2}/\\d{2}/\\d{4}")
-
-                    // Keep track of original text length
-                    val originalLength = updatedText.length
-                    // Update the revision date
-                    updatedText = revDateRegex.replace(updatedText, "Revision Date: $currentDate")
-                    // Update the revision number, ensuring we don't affect other parts
-                    updatedText =
-                        revNumberRegex.replace(updatedText, "Revision Number: ${String.format("%02d", newRevNumber)}")
-                    // Ensure we're not truncating
-                    if (runs.size == 1) {
-                        // If there's only one run, simply update it
-                        runs[0].setText(updatedText, 0)
-                    } else {
-                        // For multiple runs, carefully preserve the structure
-                        var currentIndex = 0
-                        for (run in runs) {
-                            val runLength = run.text().length
-                            if (currentIndex + runLength <= updatedText.length) {
-                                run.setText(updatedText.substring(currentIndex, currentIndex + runLength), 0)
-                                currentIndex += runLength
-                            } else if (currentIndex < updatedText.length) {
-                                run.setText(updatedText.substring(currentIndex), 0)
-                                currentIndex = updatedText.length
-                            } else {
-                                run.setText("", 0)
-                            }
-                        }
-                    }
-                }
-            }
-            FileOutputStream(file).use { outStream ->
-                doc.write(outStream)
-            }
-        }
-        val repoRoot = folder?.toPath()?.toAbsolutePath()?.normalize()
-        val filePath = file.toPath().toAbsolutePath().normalize()
-        val relativePath = repoRoot?.relativize(filePath)?.toString()?.replace("\\", "/")
-        relativePath?.let { path ->
-//            git.add().addFilepattern(path).call()
-//            getUserInput("Enter Reason for revision")?.let { input ->
-//                git.commit()
-//                    .setMessage(
-//                        "Revision Date: $currentDate Revision Number: ${
-//                            String.format(
-//                                "%02d",
-//                                newRevNumber
-//                            )
-//                        } $input"
-//                    )
-//                    .call()
+//    private fun updateFile() {
+//        val currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+//        val file = folder?.let { searchFile(selectedNode.toString(), it) } ?: return
+//        selectedFile = file
+//        var newRevNumber = 1
+//        try {
+//            RandomAccessFile(file, "rw").close()
+//        } catch (e: IOException) {
+//            JOptionPane.showMessageDialog(
+//                null,
+//                "Please close the file before updating.",
+//                "File Open",
+//                JOptionPane.WARNING_MESSAGE
+//            )
+//            return
+//        }
+//        FileInputStream(file).use { inStream ->
+//            val doc = XWPFDocument(inStream)
+//            val headerPolicy = doc.headerFooterPolicy
+//            val header = headerPolicy.defaultHeader ?: return
+//
+//            // First, find the revision number and build complete text
+//            val fullHeaderText = StringBuilder()
+//            for (paragraph in header.paragraphs) {
+//                for (run in paragraph.runs) {
+//                    fullHeaderText.append(run.text())
+//                }
 //            }
-        }
-
-    }
+//            // Find and update the revision number first
+//            val revNumberRegex = Regex("Revision [Nn]umber: (\\d+)")
+//            val revNumberMatch = revNumberRegex.find(fullHeaderText.toString())
+//            val currentRevNumber = revNumberMatch?.groupValues?.get(1)?.toIntOrNull() ?: 0
+//            newRevNumber = currentRevNumber + 1
+//            // Now process each paragraph carefully
+//            for (paragraph in header.paragraphs) {
+//                val runs = paragraph.runs
+//                val paragraphText = StringBuilder()
+//                for (run in runs) {
+//                    paragraphText.append(run.text())
+//                }
+//                var updatedText = paragraphText.toString()
+//                // Only update if this paragraph contains revision information
+//                if (updatedText.contains("Revision", ignoreCase = true)) {
+//                    val revDateRegex = Regex("Revision Date: \\d{2}/\\d{2}/\\d{4}")
+//
+//                    // Keep track of original text length
+//                    val originalLength = updatedText.length
+//                    // Update the revision date
+//                    updatedText = revDateRegex.replace(updatedText, "Revision Date: $currentDate")
+//                    // Update the revision number, ensuring we don't affect other parts
+//                    updatedText =
+//                        revNumberRegex.replace(updatedText, "Revision Number: ${String.format("%02d", newRevNumber)}")
+//                    // Ensure we're not truncating
+//                    if (runs.size == 1) {
+//                        // If there's only one run, simply update it
+//                        runs[0].setText(updatedText, 0)
+//                    } else {
+//                        // For multiple runs, carefully preserve the structure
+//                        var currentIndex = 0
+//                        for (run in runs) {
+//                            val runLength = run.text().length
+//                            if (currentIndex + runLength <= updatedText.length) {
+//                                run.setText(updatedText.substring(currentIndex, currentIndex + runLength), 0)
+//                                currentIndex += runLength
+//                            } else if (currentIndex < updatedText.length) {
+//                                run.setText(updatedText.substring(currentIndex), 0)
+//                                currentIndex = updatedText.length
+//                            } else {
+//                                run.setText("", 0)
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            FileOutputStream(file).use { outStream ->
+//                doc.write(outStream)
+//            }
+//        }
+//        val repoRoot = folder?.toPath()?.toAbsolutePath()?.normalize()
+//        val filePath = file.toPath().toAbsolutePath().normalize()
+//        val relativePath = repoRoot?.relativize(filePath)?.toString()?.replace("\\", "/")
+//        relativePath?.let { path ->
+////            git.add().addFilepattern(path).call()
+////            getUserInput("Enter Reason for revision")?.let { input ->
+////                git.commit()
+////                    .setMessage(
+////                        "Revision Date: $currentDate Revision Number: ${
+////                            String.format(
+////                                "%02d",
+////                                newRevNumber
+////                            )
+////                        } $input"
+////                    )
+////                    .call()
+////            }
+//        }
+//
+//    }
 
 
     private fun showRevHistory() {

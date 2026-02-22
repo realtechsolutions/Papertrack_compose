@@ -23,7 +23,7 @@ import papertrack.composeapp.generated.resources.compose_multiplatform
 @Preview
 fun App() {
     MaterialTheme {
-FileTreeItem(folder)
+FileTreeItem(folder,true)
 
     }
 }

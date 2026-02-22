@@ -12,7 +12,7 @@ import java.net.URISyntaxException
 import javax.swing.*
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
-val userHome: String? = System.getProperty("user.home")
+//val userHome: String? = System.getProperty("user.home")
 
 //var folder: File = File(userHome,"Papertracks/Docs/Docs")
 //var folder:File = File("app/resources)//Docs")
