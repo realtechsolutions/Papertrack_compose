@@ -2,32 +2,8 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "1b2a708b3bd1ef51342093103a987747",
+    "identityHash": "429d06aa88f0c6c0dbb413ea0c70b559",
     "entities": [
-      {
-        "tableName": "User",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL)",
-        "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "name",
-            "columnName": "name",
-            "affinity": "TEXT",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": true,
-          "columnNames": [
-            "id"
-          ]
-        }
-      },
       {
         "tableName": "CompanyInfo",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `address` TEXT NOT NULL, `contactNo` TEXT NOT NULL)",
@@ -63,11 +39,86 @@
             "id"
           ]
         }
+      },
+      {
+        "tableName": "DocumentRevision",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `documentNo` TEXT NOT NULL, `revNumber` INTEGER NOT NULL, `revDate` INTEGER NOT NULL, `revReason` TEXT NOT NULL, `title` TEXT NOT NULL, `filePath` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "documentNo",
+            "columnName": "documentNo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "revNumber",
+            "columnName": "revNumber",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "revDate",
+            "columnName": "revDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "revReason",
+            "columnName": "revReason",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "filePath",
+            "columnName": "filePath",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_DocumentRevision_documentNo",
+            "unique": false,
+            "columnNames": [
+              "documentNo"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_DocumentRevision_documentNo` ON `${TABLE_NAME}` (`documentNo`)"
+          },
+          {
+            "name": "index_DocumentRevision_documentNo_revNumber",
+            "unique": true,
+            "columnNames": [
+              "documentNo",
+              "revNumber"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_DocumentRevision_documentNo_revNumber` ON `${TABLE_NAME}` (`documentNo`, `revNumber`)"
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1b2a708b3bd1ef51342093103a987747')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '429d06aa88f0c6c0dbb413ea0c70b559')"
     ]
   }
 }

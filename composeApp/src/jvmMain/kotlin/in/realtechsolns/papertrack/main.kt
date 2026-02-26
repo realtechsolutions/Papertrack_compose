@@ -3,8 +3,12 @@ package `in`.realtechsolns.papertrack
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import androidx.room.Database
+import `in`.realtechsolns.papertrack.data.AppDatabase
+import `in`.realtechsolns.papertrack.data.CompanyDao
 import `in`.realtechsolns.papertrack.data.CompanyInfo
-import `in`.realtechsolns.papertrack.data.User
+import `in`.realtechsolns.papertrack.data.DocumentRevisionDao
+//import `in`.realtechsolns.papertrack.data.User
 import `in`.realtechsolns.papertrack.data.getDatabaseBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,17 +27,19 @@ import javax.swing.SwingUtilities
 import javax.swing.WindowConstants
 
 lateinit var prefs: Preferences
+lateinit var db: AppDatabase
+lateinit var companyDao: CompanyDao
+lateinit var documentRevisionDao : DocumentRevisionDao
 fun main() {
 
     val scope = CoroutineScope(Dispatchers.IO)
     scope.launch {
-        val db = getDatabaseBuilder()
-            .fallbackToDestructiveMigration(false)
+        db = getDatabaseBuilder()
+            .fallbackToDestructiveMigration(true)
             .build()
 
-        val dao = db.userDao()
-        val companyDao = db.companyDao()
-
+         companyDao = db.companyDao()
+        documentRevisionDao = db.documentRevisionDao()
         run {
             companyDao.insert(CompanyInfo(name = "ABC Ltd", address = "999 Industrial area", contactNo = "99999"))
             val company  = companyDao.getAll()
@@ -47,21 +53,6 @@ fun main() {
 
     prefs = Preferences.userRoot().node("MyAppPreferences")
     LuceneManager.initialize()
-//  SwingUtilities.invokeLater {
-//
-//      JFrame().apply {
-//          defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
-//          background = Color(Color.OPAQUE)
-//         // iconImage = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB)
-//          setSize(800, 600)
-//          jMenuBar = TopMenu(prefs,this)
-//         val panel = DocsPanel(this)
-//          add(panel, BorderLayout.NORTH)
-//          isVisible = true
-//      }
-//  }
-
-
     application {
         Window(
             onCloseRequest = ::exitApplication,
@@ -103,7 +94,7 @@ suspend fun copyFolderToUserSystem(folderName: String, targetSubPath: String) {
                 entry = zis.nextEntry
             }
         }
-        println("Deployment successful to: ${targetDir.absolutePath}")
+       // println("Deployment successful to: ${targetDir.absolutePath}")
     } catch (e: Exception) {
         e.printStackTrace()
     }

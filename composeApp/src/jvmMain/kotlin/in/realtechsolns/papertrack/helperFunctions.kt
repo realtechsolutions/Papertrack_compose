@@ -26,6 +26,12 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.unit.dp
+import `in`.realtechsolns.papertrack.data.DocumentRevision
+import `in`.realtechsolns.papertrack.data.DocumentRevisionDao
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.apache.commons.math3.ode.MainStateJacobianProvider
 import org.apache.poi.hpsf.Date
 import org.apache.poi.util.Units
 import org.apache.poi.xwpf.model.XWPFHeaderFooterPolicy
@@ -34,6 +40,7 @@ import org.apache.poi.xwpf.usermodel.XWPFFooter
 import org.apache.poi.xwpf.usermodel.XWPFHeader
 import java.awt.Desktop
 import java.awt.GridLayout
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -52,6 +59,8 @@ import javax.swing.tree.DefaultMutableTreeNode
 val userHome: String? = System.getProperty("user.home")
 var folder: File = File(userHome, "Papertracks/Docs/Docs")
 val orgChart :File = File(userHome, "Papertracks/orgChart/orgChart/index.html")
+val editOrgChart :File = File(userHome, "Papertracks/orgChart/orgChart/edit.html")
+
 val desktop: Desktop? = Desktop.getDesktop()
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -141,7 +150,145 @@ fun FileTreeItem(file: File, initialExpanded: Boolean = false) {
     }
 }
 
-private fun updateFile(file: File) {
+//private fun updateFile(
+//    originalFile: File,
+//    //documentNo: String,
+//    //title: String,
+//    revReason: String,
+//    userDirectory: File,
+//    dao: DocumentRevisionDao
+//) {
+//
+//    val currentDate = LocalDate.now()
+//        .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+//
+//    try {
+//        RandomAccessFile(originalFile, "rw").close()
+//    } catch (e: IOException) {
+//        JOptionPane.showMessageDialog(
+//            null,
+//            "Please close the file before updating.",
+//            "File Open",
+//            JOptionPane.WARNING_MESSAGE
+//        )
+//        return
+//    }
+//
+//    val revDateRegex = Regex("Revision Date: \\d{2}/\\d{2}/\\d{4}")
+//    val revNumberRegex = Regex("Revision [Nn]umber: (\\d+)")
+//    val titleRegex = Regex("Title:\\s*(.+)")
+//    val documentNoRegex = Regex("Document No\\.?\\s*:?\\s*(.+)")
+//    var newRevNumber = 1
+//    var extractedTitle = ""
+//    var extractedDocumentNo = ""
+//    val updatedBytes: ByteArray
+//
+//    FileInputStream(originalFile).use { inStream ->
+//        val doc = XWPFDocument(inStream)
+//        val header = doc.headerFooterPolicy?.defaultHeader ?: return
+//
+//        for (paragraph in header.paragraphs) {
+//            val runs = paragraph.runs
+//            if (runs.isEmpty()) continue
+//
+//            val fullText = runs.joinToString("") { it.text() }
+//            val titleMatch = titleRegex.find(fullText)
+//            if (titleMatch != null) {
+//                extractedTitle = titleMatch.groupValues[1].trim()
+//            }
+//
+//            // -------- Extract Document No --------
+//            val docMatch = documentNoRegex.find(fullText)
+//            if (docMatch != null) {
+//                extractedDocumentNo = docMatch.groupValues[1].trim()
+//            }
+//
+//
+//
+//            if (!fullText.contains("Revision", ignoreCase = true)) continue
+//
+//            val revMatch = revNumberRegex.find(fullText)
+//            val currentRev = revMatch?.groupValues?.get(1)?.toIntOrNull() ?: 0
+//
+//
+//
+//            newRevNumber = currentRev + 1
+//
+//            var updatedText =
+//                revDateRegex.replace(fullText, "Revision Date: $currentDate")
+//
+//            updatedText =
+//                revNumberRegex.replace(
+//                    updatedText,
+//                    "Revision Number: ${String.format("%02d", newRevNumber)}"
+//                )
+//
+//            runs[0].setText(updatedText, 0)
+//            for (i in 1 until runs.size) {
+//                runs[i].setText("", 0)
+//            }
+//        }
+//
+//        ByteArrayOutputStream().use { baos ->
+//            doc.write(baos)
+//            updatedBytes = baos.toByteArray()
+//        }
+//    }
+//
+//    // 🔥 Now do DB + File saving in background
+//    CoroutineScope(Dispatchers.IO).launch {
+//
+//        if (!userDirectory.exists()) {
+//            userDirectory.mkdirs()
+//        }
+//
+//        val nextRev = dao.getNextRevisionNumber(documentNo)
+//
+//        val newFileName = "${documentNo}_rev${String.format("%02d", nextRev)}.docx"
+//        val newFile = File(userDirectory, newFileName)
+//
+//        try {
+//            // 1️⃣ Save file
+//            newFile.writeBytes(updatedBytes)
+//
+//            // 2️⃣ Insert into DB
+//            dao.insertRevisionInternal(
+//                DocumentRevision(
+//                    documentNo = extractedDocumentNo,
+//                    revNumber = currentRev ,
+//                    revReason = revReason,
+//                    title = title,
+//                    filePath = originalFile.path
+//                )
+//            )
+//
+//            // 3️⃣ Delete older revisions from DB
+//            dao.deleteOlderRevisions(documentNo)
+//
+//            // 4️⃣ Delete old files physically
+//            val revisions = dao.getRevisionsOfDocument(documentNo)
+//            if (revisions.size > 5) {
+//                val toDelete = revisions.drop(5)
+//                toDelete.forEach {
+//                    File(it.filePath).delete()
+//                }
+//            }
+//
+//        } catch (e: Exception) {
+//            if (newFile.exists()) newFile.delete()
+//            e.printStackTrace()
+//        }
+//    }
+//
+//    println("Revision $newRevNumber saved successfully")
+//}
+//
+//
+
+
+private fun updateFile(file: File, dao: DocumentRevisionDao = documentRevisionDao) {
+   val scope = CoroutineScope(Dispatchers.Default)
+
     val currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
 
     try {
@@ -155,10 +302,17 @@ private fun updateFile(file: File) {
         )
         return
     }
-
+    val reason = JOptionPane.showInputDialog(null, "Enter reason for revision")
     val revDateRegex = Regex("Revision Date: \\d{2}/\\d{2}/\\d{4}")
     val revNumberRegex = Regex("Revision [Nn]umber: (\\d+)")
     var newRevNumber = 1
+    var currentRevNumber = 1
+
+    val titleRegex = Regex("Title:\\s*(.+)")
+   val documentNoRegex = Regex("Document No\\.?\\s*:?\\s*(.+)")
+   //var newRevNumber = 1
+   var extractedTitle = ""
+   var extractedDocumentNo = ""
 
     FileInputStream(file).use { inStream ->
         val doc = XWPFDocument(inStream)
@@ -173,7 +327,21 @@ private fun updateFile(file: File) {
 
             val revMatch = revNumberRegex.find(fullText)
             val currentRev = revMatch?.groupValues?.get(1)?.toIntOrNull() ?: 0
+            currentRevNumber = currentRev
             newRevNumber = currentRev + 1
+            val titleMatch = titleRegex.find(fullText)
+            if (titleMatch != null) {
+                extractedTitle = titleMatch.groupValues[1].trim()
+            }
+
+            // -------- Extract Document No --------
+            val docMatch = documentNoRegex.find(fullText)
+            if (docMatch != null) {
+                extractedDocumentNo = docMatch.groupValues[1].trim()
+            }
+
+
+
 
             var updatedText = revDateRegex.replace(fullText, "Revision Date: $currentDate")
             updatedText = revNumberRegex.replace(updatedText, "Revision Number: ${String.format("%02d", newRevNumber)}")
@@ -188,7 +356,27 @@ private fun updateFile(file: File) {
             doc.write(outStream)
         }
     }
-    println("$newRevNumber updated")
+                // 2️⃣ Insert into DB
+    scope.launch {
+        val newFileName = "${extractedTitle}_rev${String.format("%02d", currentRevNumber)}.docx"
+      val newFile = File(userHome, "obsoleteDocs/$newFileName")
+
+        dao.insertRevisionInternal(
+            DocumentRevision(
+                documentNo = extractedDocumentNo,
+                revNumber = currentRevNumber,
+                revReason = reason,
+                title = extractedTitle,
+                filePath = "$userHome/obsoleteDocs/$newFileName"
+            )
+        )
+    }
+
+    JOptionPane.showMessageDialog(null, "file updated" +
+            "with $extractedDocumentNo  $extractedTitle $newRevNumber $reason")
+
+
+
 }
 
 
