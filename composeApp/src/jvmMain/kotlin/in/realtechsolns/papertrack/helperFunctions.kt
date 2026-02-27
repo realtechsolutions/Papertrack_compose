@@ -287,10 +287,9 @@ fun FileTreeItem(file: File, initialExpanded: Boolean = false) {
 
 
 private fun updateFile(file: File, dao: DocumentRevisionDao = documentRevisionDao) {
-   val scope = CoroutineScope(Dispatchers.Default)
 
+    val scope = CoroutineScope(Dispatchers.Default)
     val currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-
     try {
         RandomAccessFile(file, "rw").close()
     } catch (e: IOException) {
@@ -303,35 +302,34 @@ private fun updateFile(file: File, dao: DocumentRevisionDao = documentRevisionDa
         return
     }
     val reason = JOptionPane.showInputDialog(null, "Enter reason for revision")
-    val revDateRegex = Regex("Revision Date: \\d{2}/\\d{2}/\\d{4}")
+    //val revDateRegex = Regex("Revision Date: \\d{2}/\\d{2}/\\d{4}")
+    val revDateRegex = Regex("Revision Date: (\\d{2}/\\d{2}/\\d{4})")
     val revNumberRegex = Regex("Revision [Nn]umber: (\\d+)")
     var newRevNumber = 1
     var currentRevNumber = 1
-
     val titleRegex = Regex("Title:\\s*(.+)")
    val documentNoRegex = Regex("Document No\\.?\\s*:?\\s*(.+)")
    //var newRevNumber = 1
    var extractedTitle = ""
    var extractedDocumentNo = ""
+    var obsoleteFileName:String =""
+    var obsoleteFile :File
+    var extractedRevDate :String = ""
 
     FileInputStream(file).use { inStream ->
         val doc = XWPFDocument(inStream)
         val header = doc.headerFooterPolicy?.defaultHeader ?: return
-
         for (paragraph in header.paragraphs) {
             val runs = paragraph.runs
             if (runs.isEmpty()) continue
-
             val fullText = runs.joinToString("") { it.text() }
             if (!fullText.contains("Revision", ignoreCase = true)) continue
-
             val revMatch = revNumberRegex.find(fullText)
             val currentRev = revMatch?.groupValues?.get(1)?.toIntOrNull() ?: 0
             currentRevNumber = currentRev
             newRevNumber = currentRev + 1
             val titleMatch = titleRegex.find(fullText)
-            if (titleMatch != null) {
-                extractedTitle = titleMatch.groupValues[1].trim()
+            if (titleMatch != null) { extractedTitle = titleMatch.groupValues[1].trim()
             }
 
             // -------- Extract Document No --------
@@ -339,10 +337,13 @@ private fun updateFile(file: File, dao: DocumentRevisionDao = documentRevisionDa
             if (docMatch != null) {
                 extractedDocumentNo = docMatch.groupValues[1].trim()
             }
+            val revDateMatch = revDateRegex.find(fullText)
+            if (revDateMatch != null) {extractedRevDate = revDateMatch.groupValues[1].trim()}
 
-
-
-
+             obsoleteFileName = "${extractedTitle}_rev${String.format("%02d", currentRevNumber)}.docx"
+             obsoleteFile= File(userHome, "obsoleteDocs/$obsoleteFileName")
+            obsoleteFile.parentFile?.mkdirs()
+            FileOutputStream(obsoleteFile).use { outStream ->doc.write(outStream) }
             var updatedText = revDateRegex.replace(fullText, "Revision Date: $currentDate")
             updatedText = revNumberRegex.replace(updatedText, "Revision Number: ${String.format("%02d", newRevNumber)}")
 
@@ -358,8 +359,6 @@ private fun updateFile(file: File, dao: DocumentRevisionDao = documentRevisionDa
     }
                 // 2️⃣ Insert into DB
     scope.launch {
-        val newFileName = "${extractedTitle}_rev${String.format("%02d", currentRevNumber)}.docx"
-      val newFile = File(userHome, "obsoleteDocs/$newFileName")
 
         dao.insertRevisionInternal(
             DocumentRevision(
@@ -367,13 +366,14 @@ private fun updateFile(file: File, dao: DocumentRevisionDao = documentRevisionDa
                 revNumber = currentRevNumber,
                 revReason = reason,
                 title = extractedTitle,
-                filePath = "$userHome/obsoleteDocs/$newFileName"
+                filePath = "$userHome/obsoleteDocs/$obsoleteFileName",
+                revDate = extractedRevDate
             )
         )
     }
 
     JOptionPane.showMessageDialog(null, "file updated" +
-            "with $extractedDocumentNo  $extractedTitle $newRevNumber $reason")
+            "with  rev no: $newRevNumber , reason: $reason . Old version also saved ")
 
 
 

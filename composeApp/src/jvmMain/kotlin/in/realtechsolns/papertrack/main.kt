@@ -40,11 +40,10 @@ fun main() {
 
          companyDao = db.companyDao()
         documentRevisionDao = db.documentRevisionDao()
-        run {
+
             companyDao.insert(CompanyInfo(name = "ABC Ltd", address = "999 Industrial area", contactNo = "99999"))
-            val company  = companyDao.getAll()
-            println(company)
-        }
+            //val company  = companyDao.getAll()
+           // println(company)
         copyFolderToUserSystem("Docs","Papertracks/Docs")
         copyFolderToUserSystem("orgChart","Papertracks/orgChart")
 

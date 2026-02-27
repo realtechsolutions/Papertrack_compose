@@ -11,7 +11,7 @@ import androidx.room.util.TableInfo
 //    val id: Int = 0,
 //    val name: String
 //)
-@Entity
+@Entity  (indices = [Index(value = ["name"], unique = true)])
 data class CompanyInfo (
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
@@ -30,7 +30,8 @@ data class DocumentRevision (
     val id: Long = 0,
     val documentNo: String,
     val revNumber: Int,
-    val revDate: Long = System.currentTimeMillis(),
+    //val revDate: Long = System.currentTimeMillis(),
+    val revDate: String = "",
     val revReason : String ,
     val title : String,
     val filePath : String

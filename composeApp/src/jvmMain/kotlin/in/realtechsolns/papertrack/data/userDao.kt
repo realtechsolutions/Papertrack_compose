@@ -18,7 +18,7 @@ import androidx.room.Transaction
 
 @Dao
 interface CompanyDao  {
-    @Insert
+    @Insert (onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(info: CompanyInfo)
 
     @Query("SELECT * FROM CompanyInfo")
