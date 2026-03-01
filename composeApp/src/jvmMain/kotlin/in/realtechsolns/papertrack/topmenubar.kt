@@ -23,7 +23,11 @@ fun FrameWindowScope.AppMenuBar(
         }
 
         Menu(" Search   ") {
+            Item("Add your documents for search", onClick = onRefresh)
             Item("Search by document no.", onClick = onRefresh)
+            Item("Search by revision no.", onClick = onRefresh)
+            Item("Search by document title", onClick = onRefresh)
+            Item("Search by revision date.", onClick = onRefresh)
             Item("Search by text", onClick = onRefresh)
         }
 
