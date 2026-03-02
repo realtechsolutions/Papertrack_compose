@@ -62,6 +62,7 @@ interface DocumentRevisionDao {
         documentNo: String,
         revReason: String,
         title: String,
+        fileName : String,
         filePath: String
     ) {
         val nextRev = getNextRevisionNumber(documentNo)
@@ -71,6 +72,7 @@ interface DocumentRevisionDao {
             revNumber = nextRev,
             revReason = revReason,
             title = title,
+            fileName = fileName,
             filePath = filePath
         )
 
@@ -98,4 +100,14 @@ interface DocumentRevisionDao {
         LIMIT 1
     """)
     suspend fun getLatestRevision(docNo: String): DocumentRevision?
+
+
+    @Query("DELETE FROM DocumentRevision WHERE fileName = :fileName AND id NOT IN (SELECT id FROM DocumentRevision WHERE fileName = :fileName ORDER BY revNumber DESC LIMIT 3)")
+    suspend fun keepOnlyLatestThree(fileName: String)
+
+    @Query("SELECT filePath FROM DocumentRevision WHERE fileName = :fileName AND id NOT IN (SELECT id FROM DocumentRevision WHERE fileName = :fileName ORDER BY revNumber DESC LIMIT 3)")
+    suspend fun getFilePathsToDelete(fileName: String): List<String>
+
+
 }
+

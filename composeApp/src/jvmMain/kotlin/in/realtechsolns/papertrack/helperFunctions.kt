@@ -80,16 +80,17 @@ fun FileTreeItem(file: File, initialExpanded: Boolean = false) {
             DropdownMenuItem(
                 text = { Text("Update File") },
                 onClick = { /* handle */ isMenuVisible = false
-                  //  println("${file.name}  Updated")
-                   updateFile(file,scope)
+                    updateFile(file,scope)
                 }
             )
             DropdownMenuItem(
-                text = { Text("Revision History") },
-                onClick = { /* handle */ isMenuVisible = false }
+                text = { Text("View revision history") },
+                onClick = {  isMenuVisible = false
+
+                }
             )
             DropdownMenuItem(
-                text = { Text("Previous Versions") },
+                text = { Text("View previous versions") },
                 onClick = { /* handle */ isMenuVisible = false }
             )
         }
@@ -308,10 +309,17 @@ private fun updateFile(
                     revNumber = headerData.currentRevNumber,
                     revReason = reason,
                     title = headerData.title,
+                    fileName = file.name,
                     filePath = obsoleteFile.absolutePath,
                     revDate = headerData.revDate
                 )
             )
+           // dao.keepOnlyLatestThree(file.name)
+            val filesToDelete = dao.getFilePathsToDelete(file.name)
+           println(filesToDelete)
+            filesToDelete.forEach {val file = File(it)
+            if (file.exists()) file.delete()
+            }
         } catch (e: Exception) {
             // Switch back to Main to show dialog — in Compose Desktop this is the AWT/Swing thread
             withContext(Dispatchers.Main) {

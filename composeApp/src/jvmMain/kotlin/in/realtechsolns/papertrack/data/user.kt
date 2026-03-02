@@ -22,9 +22,10 @@ data class CompanyInfo (
 
 )
 
-@Entity(indices = [Index(value = ["documentNo"]),Index(value = ["documentNo","revNumber"], unique = true)
-]
-)
+@Entity
+  //(indices = [Index(value = ["documentNo"]),Index(value = ["documentNo","revNumber"], unique = true)
+//]
+//)
 data class DocumentRevision (
   @PrimaryKey (autoGenerate = true)
     val id: Long = 0,
@@ -34,6 +35,7 @@ data class DocumentRevision (
     val revDate: String = "",
     val revReason : String ,
     val title : String,
+  val fileName : String,
     val filePath : String
 
 )

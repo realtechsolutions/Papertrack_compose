@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "2c057614f12ce260a1e9e35147dfdf32",
+    "identityHash": "4a2004d482eb227f3aef3016338f4e09",
     "entities": [
       {
         "tableName": "CompanyInfo",
@@ -53,7 +53,7 @@
       },
       {
         "tableName": "DocumentRevision",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `documentNo` TEXT NOT NULL, `revNumber` INTEGER NOT NULL, `revDate` TEXT NOT NULL, `revReason` TEXT NOT NULL, `title` TEXT NOT NULL, `filePath` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `documentNo` TEXT NOT NULL, `revNumber` INTEGER NOT NULL, `revDate` TEXT NOT NULL, `revReason` TEXT NOT NULL, `title` TEXT NOT NULL, `fileName` TEXT NOT NULL, `filePath` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -92,6 +92,12 @@
             "notNull": true
           },
           {
+            "fieldPath": "fileName",
+            "columnName": "fileName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
             "fieldPath": "filePath",
             "columnName": "filePath",
             "affinity": "TEXT",
@@ -103,33 +109,12 @@
           "columnNames": [
             "id"
           ]
-        },
-        "indices": [
-          {
-            "name": "index_DocumentRevision_documentNo",
-            "unique": false,
-            "columnNames": [
-              "documentNo"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_DocumentRevision_documentNo` ON `${TABLE_NAME}` (`documentNo`)"
-          },
-          {
-            "name": "index_DocumentRevision_documentNo_revNumber",
-            "unique": true,
-            "columnNames": [
-              "documentNo",
-              "revNumber"
-            ],
-            "orders": [],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_DocumentRevision_documentNo_revNumber` ON `${TABLE_NAME}` (`documentNo`, `revNumber`)"
-          }
-        ]
+        }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2c057614f12ce260a1e9e35147dfdf32')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4a2004d482eb227f3aef3016338f4e09')"
     ]
   }
 }
