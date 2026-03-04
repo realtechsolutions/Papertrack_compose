@@ -73,9 +73,14 @@ fun main() {
 suspend fun copyFolderToUserSystem(folderName: String, targetSubPath: String) {
     val userHome = System.getProperty("user.home")
     val targetDir = File(userHome, targetSubPath)
+    val nestedDir = File(targetDir, "Docs")
 
     if (!targetDir.exists()) targetDir.mkdirs()
+
     try {
+        if (nestedDir.exists() && nestedDir.list()?.isNotEmpty() == true) {
+            return
+        }
         val bytes = Res.readBytes("files/$folderName.zip")
         ZipInputStream(bytes.inputStream()).use { zis ->
             var entry = zis.nextEntry

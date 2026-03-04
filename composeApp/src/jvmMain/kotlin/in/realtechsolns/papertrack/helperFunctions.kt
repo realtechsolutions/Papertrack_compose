@@ -418,6 +418,8 @@ private fun updateFile(file: File, scope: CoroutineScope, dao:DocumentRevisionDa
             val currentRev = revMatch?.groupValues?.get(1)?.toIntOrNull() ?: 0
             currentRevNumber = currentRev
             newRevNumber = currentRev + 1
+
+            println("currentrevNo:$currentRevNumber, newrevno: $newRevNumber")
             val titleMatch = titleRegex.find(fullText)
             if (titleMatch != null) { extractedTitle = titleMatch.groupValues[1].trim()
             }

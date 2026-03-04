@@ -23,9 +23,9 @@ data class CompanyInfo (
 )
 
 @Entity
-  //(indices = [Index(value = ["documentNo"]),Index(value = ["documentNo","revNumber"], unique = true)
-//]
-//)
+  (indices = [Index(value = ["documentNo"]),Index(value = ["documentNo","revNumber"], unique = true)
+]
+)
 data class DocumentRevision (
   @PrimaryKey (autoGenerate = true)
     val id: Long = 0,
