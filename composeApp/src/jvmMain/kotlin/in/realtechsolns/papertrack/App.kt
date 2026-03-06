@@ -24,6 +24,11 @@ import papertrack.composeapp.generated.resources.compose_multiplatform
 fun App() {
     MaterialTheme {
 FileTreeItem(folder,true)
+        if(isRevHistoryVisible.value){
 
-    }
+showRevisionHistory()
+
+        }        }
+
+
 }

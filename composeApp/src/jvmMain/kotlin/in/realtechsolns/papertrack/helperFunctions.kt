@@ -15,6 +15,7 @@ import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Text
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,12 +50,14 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.RandomAccessFile
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.swing.JFileChooser
 import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.JOptionPane
 import javax.swing.JPanel
+import javax.swing.JTable
 import javax.swing.JTextArea
 import javax.swing.JTextField
 import javax.swing.tree.DefaultMutableTreeNode
@@ -64,15 +67,19 @@ val orgChart :File = File(userHome, "Papertracks/orgChart/orgChart/index.html")
 val editOrgChart :File = File(userHome, "Papertracks/orgChart/orgChart/edit.html")
 
 val desktop: Desktop? = Desktop.getDesktop()
+var isRevHistoryVisible =   mutableStateOf(false)
+lateinit var revHistory : List<DocumentRevision>
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun FileTreeItem(file: File, initialExpanded: Boolean = false) {
+fun FileTreeItem(file: File, initialExpanded: Boolean = false,dao: DocumentRevisionDao= documentRevisionDao) {
     var isExpanded by remember { mutableStateOf(initialExpanded) }
     val scope = rememberCoroutineScope()
 
     Column(modifier = Modifier.padding(start = 16.dp)) {
         var isMenuVisible by remember { mutableStateOf(false) }
+
+
         CursorDropdownMenu(
             expanded = isMenuVisible,
             onDismissRequest = { isMenuVisible = false }
@@ -87,6 +94,18 @@ fun FileTreeItem(file: File, initialExpanded: Boolean = false) {
                 text = { Text("View revision history") },
                 onClick = {  isMenuVisible = false
 
+                 scope.launch {
+                     isRevHistoryVisible.value = !isRevHistoryVisible.value
+                      revHistory = dao.getFullRevisionHistory(file.name)
+                     revHistory.forEach {
+                        println(" ${it.revNumber} | ${it.revDate} | ${it.revReason}")
+
+
+
+
+                     }
+
+                 }
                 }
             )
             DropdownMenuItem(
@@ -174,8 +193,8 @@ fun FileTreeItem(file: File, initialExpanded: Boolean = false) {
 //
 //    val reason = JOptionPane.showInputDialog(null, "Enter reason for revision") ?: return
 //    val currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-//
-//    val revDateRegex = Regex("Revision Date: (\\d{2}/\\d{2}/\\d{4})")
+//    val revDateRegex = Regex("Revision Date: (\\d{2}[/-]\\d{2}[/-]\\d{4})")
+//    //val revDateRegex = Regex("Revision Date: (\\d{2}/\\d{2}/\\d{4})")
 //    val revNumberRegex = Regex("Revision [Nn]umber: (\\d+)")
 //    val titleRegex = Regex("Title:\\s*(.+)")
 //    val documentNoRegex = Regex("Document No\\.?\\s*:?\\s*(.+)")
@@ -347,8 +366,8 @@ fun FileTreeItem(file: File, initialExpanded: Boolean = false) {
 //    )
 //}
 //
-//
-//
+
+
 
 
 
@@ -370,8 +389,9 @@ private fun updateFile(file: File, scope: CoroutineScope, dao:DocumentRevisionDa
     }
     val reason = JOptionPane.showInputDialog(null, "Enter reason for revision")
     //val revDateRegex = Regex("Revision Date: \\d{2}/\\d{2}/\\d{4}")
-    val revDateRegex = Regex("Revision Date: (\\d{2}/\\d{2}/\\d{4})")
+    //val revDateRegex = Regex("Revision Date: (\\d{2}/\\d{2}/\\d{4})")
     val revNumberRegex = Regex("Revision [Nn]umber: (\\d+)")
+    val revDateRegex = Regex("Revision Date: (\\d{2}[/-]\\d{2}[/-]\\d{4})")
     var newRevNumber = 1
     var currentRevNumber = 1
     val titleRegex = Regex("Title:\\s*(.+)")
@@ -384,8 +404,10 @@ private fun updateFile(file: File, scope: CoroutineScope, dao:DocumentRevisionDa
     var extractedRevDate :String = ""
 
 // ✅ Set name first
+    val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
+    val timestamp = LocalDateTime.now().format(formatter)
     val currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-    val obsoleteFileName = "${file.nameWithoutExtension}_$currentDate.docx"
+    val obsoleteFileName = "${file.nameWithoutExtension}_$timestamp.docx"
     val obsoleteFile = File(userHome, "obsoleteDocs/$obsoleteFileName")
     println("userHome = $userHome")
     println("source file path = ${file.absolutePath}")
@@ -409,36 +431,64 @@ private fun updateFile(file: File, scope: CoroutineScope, dao:DocumentRevisionDa
         val doc = XWPFDocument(inStream)
         // FileOutputStream(obsoleteFile).use { outStream ->doc.write(outStream) }
         val header = doc.headerFooterPolicy?.defaultHeader ?: return
+//        for (paragraph in header.paragraphs) {
+//            val runs = paragraph.runs
+//            if (runs.isEmpty()) continue
+//            val fullText = runs.joinToString("") { it.text() }
+//            if (!fullText.contains("Revision", ignoreCase = true)) continue
+//            val revMatch = revNumberRegex.find(fullText)
+//            val currentRev = revMatch?.groupValues?.get(1)?.toIntOrNull() ?: 0
+//            currentRevNumber = currentRev
+//            newRevNumber = currentRev + 1
+//
+//            println("currentrevNo:$currentRevNumber, newrevno: $newRevNumber")
+//            val titleMatch = titleRegex.find(fullText)
+//            if (titleMatch != null) { extractedTitle = titleMatch.groupValues[1].trim()
+//            }
+//
+//            // -------- Extract Document No --------
+//            val docMatch = documentNoRegex.find(fullText)
+//            if (docMatch != null) {
+//                extractedDocumentNo = docMatch.groupValues[1].trim()
+//            }
+//            val revDateMatch = revDateRegex.find(fullText)
+//            if (revDateMatch != null) {extractedRevDate = revDateMatch.groupValues[1].trim()}
+//
+//
+//            var updatedText = revDateRegex.replace(fullText, "Revision Date: $currentDate")
+//            updatedText = revNumberRegex.replace(updatedText, "Revision Number: ${String.format("%02d", newRevNumber)}")
+//
+//            runs[0].setText(updatedText, 0)
+//            for (i in 1 until runs.size) {
+//                runs[i].setText("", 0)
+//            }
+//        }
+
+        for (paragraph in header.paragraphs) {
+            val fullText = paragraph.text // Simpler way to get text
+
+            revNumberRegex.find(fullText)?.let { currentRevNumber = it.groupValues[1].toIntOrNull() ?: 0 }
+            titleRegex.find(fullText)?.let { extractedTitle = it.groupValues[1].trim() }
+            documentNoRegex.find(fullText)?.let { extractedDocumentNo = it.groupValues[1].trim() }
+
+            // CAPTURE THE OLD DATE HERE BEFORE REPLACING IT
+            revDateRegex.find(fullText)?.let { extractedRevDate = it.groupValues[1].trim() }
+        }
+
+        newRevNumber = currentRevNumber + 1
+
+// 2. SECOND PASS: Update the header with NEW info
         for (paragraph in header.paragraphs) {
             val runs = paragraph.runs
             if (runs.isEmpty()) continue
             val fullText = runs.joinToString("") { it.text() }
-            if (!fullText.contains("Revision", ignoreCase = true)) continue
-            val revMatch = revNumberRegex.find(fullText)
-            val currentRev = revMatch?.groupValues?.get(1)?.toIntOrNull() ?: 0
-            currentRevNumber = currentRev
-            newRevNumber = currentRev + 1
 
-            println("currentrevNo:$currentRevNumber, newrevno: $newRevNumber")
-            val titleMatch = titleRegex.find(fullText)
-            if (titleMatch != null) { extractedTitle = titleMatch.groupValues[1].trim()
-            }
+            if (fullText.contains("Revision", ignoreCase = true)) {
+                var updatedText = revDateRegex.replace(fullText, "Revision Date: $currentDate")
+                updatedText = revNumberRegex.replace(updatedText, "Revision Number: ${String.format("%02d", newRevNumber)}")
 
-            // -------- Extract Document No --------
-            val docMatch = documentNoRegex.find(fullText)
-            if (docMatch != null) {
-                extractedDocumentNo = docMatch.groupValues[1].trim()
-            }
-            val revDateMatch = revDateRegex.find(fullText)
-            if (revDateMatch != null) {extractedRevDate = revDateMatch.groupValues[1].trim()}
-
-
-            var updatedText = revDateRegex.replace(fullText, "Revision Date: $currentDate")
-            updatedText = revNumberRegex.replace(updatedText, "Revision Number: ${String.format("%02d", newRevNumber)}")
-
-            runs[0].setText(updatedText, 0)
-            for (i in 1 until runs.size) {
-                runs[i].setText("", 0)
+                runs[0].setText(updatedText, 0)
+                for (i in 1 until runs.size) runs[i].setText("", 0)
             }
         }
 
@@ -464,13 +514,34 @@ private fun updateFile(file: File, scope: CoroutineScope, dao:DocumentRevisionDa
 
     val filesToDelete = dao.getFilePathsToDelete(file.name)
            //println(filesToDelete)
-//            filesToDelete.forEach {val file = File(it)
-//            if (file.exists()) file.delete()
-//            }
+            filesToDelete.forEach {val file = File(it)
+            if (file.exists()) file.delete()
+            }
         }
 
     JOptionPane.showMessageDialog(null, "file updated" +
             "with  rev no: $newRevNumber , reason: $reason . Old version also saved ")
+
+}
+
+@Composable
+fun showRevisionHistory(){
+Column {
+    var isinitialized = ::revHistory.isInitialized
+if (isinitialized)
+    revHistory.forEach {
+
+        Row {
+
+            Text(text = it.revNumber.toString())
+            Text(it.revDate)
+            Text(it.revReason)
+        }
+    }
+
+}
+
+
 
 }
 

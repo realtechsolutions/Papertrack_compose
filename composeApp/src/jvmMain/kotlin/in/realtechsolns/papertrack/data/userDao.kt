@@ -108,6 +108,13 @@ interface DocumentRevisionDao {
     @Query("SELECT filePath FROM DocumentRevision WHERE fileName = :fileName AND id NOT IN (SELECT id FROM DocumentRevision WHERE fileName = :fileName ORDER BY revNumber DESC LIMIT 3)")
     suspend fun getFilePathsToDelete(fileName: String): List<String>
 
+    @Query("""
+        SELECT * FROM DocumentRevision 
+        WHERE fileName = :targetFileName 
+        ORDER BY revNumber DESC
+    """)
+    suspend fun getFullRevisionHistory(targetFileName: String): List<DocumentRevision>
+
 
 }
 
