@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import kotlinx.coroutines.flow.Flow
 
 //@Dao
 //interface UserDao {
@@ -113,7 +114,7 @@ interface DocumentRevisionDao {
         WHERE fileName = :targetFileName 
         ORDER BY revNumber DESC
     """)
-    suspend fun getFullRevisionHistory(targetFileName: String): List<DocumentRevision>
+     fun getFullRevisionHistory(targetFileName: String): Flow<List<DocumentRevision>>
 
 
 }

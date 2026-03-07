@@ -8,14 +8,20 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.Button
 import androidx.compose.material.CursorDropdownMenu
+import androidx.compose.material.Divider
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Text
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,14 +30,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentDataType.Companion.Date
+import androidx.compose.ui.awt.SwingDialog
+import androidx.compose.ui.graphics.BlendMode.Companion.Color
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogWindow
+import androidx.compose.ui.window.rememberDialogState
 import `in`.realtechsolns.papertrack.data.DocumentRevision
 import `in`.realtechsolns.papertrack.data.DocumentRevisionDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.apache.commons.math3.ode.MainStateJacobianProvider
@@ -42,6 +58,7 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument
 import org.apache.poi.xwpf.usermodel.XWPFFooter
 import org.apache.poi.xwpf.usermodel.XWPFHeader
 import java.awt.Desktop
+import java.awt.Dimension
 import java.awt.GridLayout
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -61,6 +78,8 @@ import javax.swing.JTable
 import javax.swing.JTextArea
 import javax.swing.JTextField
 import javax.swing.tree.DefaultMutableTreeNode
+import kotlin.system.exitProcess
+
 val userHome: String? = System.getProperty("user.home")
 var folder: File = File(userHome, "Papertracks/Docs/Docs")
 val orgChart :File = File(userHome, "Papertracks/orgChart/orgChart/index.html")
@@ -68,8 +87,8 @@ val editOrgChart :File = File(userHome, "Papertracks/orgChart/orgChart/edit.html
 
 val desktop: Desktop? = Desktop.getDesktop()
 var isRevHistoryVisible =   mutableStateOf(false)
-lateinit var revHistory : List<DocumentRevision>
-
+//lateinit var revHistory : State<List<DocumentRevision>>
+var currentFileName  = mutableStateOf("")
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun FileTreeItem(file: File, initialExpanded: Boolean = false,dao: DocumentRevisionDao= documentRevisionDao) {
@@ -96,14 +115,13 @@ fun FileTreeItem(file: File, initialExpanded: Boolean = false,dao: DocumentRevis
 
                  scope.launch {
                      isRevHistoryVisible.value = !isRevHistoryVisible.value
-                      revHistory = dao.getFullRevisionHistory(file.name)
-                     revHistory.forEach {
-                        println(" ${it.revNumber} | ${it.revDate} | ${it.revReason}")
+                     val revHistory = dao.getFullRevisionHistory(file.name).first()
+                      // dao.getFullRevisionHistory(file.name)
+                     currentFileName.value = file.name
+                  revHistory.forEach {
+                        println(" Rev. No. :${it.revNumber} Rev. Date: ${it.revDate} Revision Reason :${it.revReason}")
 
-
-
-
-                     }
+                   }
 
                  }
                 }
@@ -139,6 +157,7 @@ fun FileTreeItem(file: File, initialExpanded: Boolean = false,dao: DocumentRevis
 
                         if (file.isFile) {
                             isMenuVisible = !isMenuVisible
+                           // currentFileName = file.name
                         }
                     }
                 }
@@ -524,33 +543,88 @@ private fun updateFile(file: File, scope: CoroutineScope, dao:DocumentRevisionDa
 
 }
 
+//@Composable
+//fun showRevisionHistory(dao: DocumentRevisionDao= documentRevisionDao,filename:String){
+//    val revHistory = dao.getFullRevisionHistory(filename).collectAsState(initial = emptyList())
+//    if (isRevHistoryVisible.value){
+//
+//        DialogWindow(onCloseRequest = {isRevHistoryVisible.value = !isRevHistoryVisible.value},
+//            title = "Revision History",state = rememberDialogState(size = DpSize(700.dp,500.dp))
+//            ) {
+//
+//                //var isinitialized = ::revHistory.isInitialize
+//                //if (isinitialized)
+//
+//
+//
+//                LazyColumn {
+//                    if ((revHistory.value).isEmpty()) {println ("emptyList") }
+//                    items(revHistory.value) { item ->
+//                        Text("")
+//
+//                        Row {
+//
+//                            Text(text = "Rev. Number : ${item.revNumber}")
+//                            Text("Revision Date:${item.revDate}")
+//                            Text(" Rev. reason: ${item.revReason}")
+//                        }
+//                        //Text("Rev: ${item.revNumber} | Date: ${item.revDate}")
+//                    }
+//
+//                }
+//
+//
+//        }
+//    }
+//
+//}
+//
+//
+
+
 @Composable
-fun showRevisionHistory(){
-Column {
-    var isinitialized = ::revHistory.isInitialized
-if (isinitialized)
-    revHistory.forEach {
+fun showRevisionHistory(dao: DocumentRevisionDao = documentRevisionDao, filename: String) {
+    val scope = rememberCoroutineScope()
+    // 1. Force the Flow to re-bind whenever the filename changes
+    val revHistory by remember(filename) {
+        dao.getFullRevisionHistory(filename)
+    }.collectAsState(initial = emptyList())
 
-        Row {
+    if (isRevHistoryVisible.value) {
+        DialogWindow(
+            onCloseRequest = { isRevHistoryVisible.value = false },
+            title = "History for $filename"
+        ) {
+            Column(Modifier.fillMaxSize().padding(16.dp)) {
 
-            Text(text = it.revNumber.toString())
-            Text(it.revDate)
-            Text(it.revReason)
+                // --- DEBUG SECTION ---
+                LaunchedEffect(filename) {
+                    println("UI is querying for: '$filename'")
+                }
+
+                if (revHistory.isEmpty()) {
+                    Text("No history for '$filename'", )
+
+                    // Button to force a manual check
+                    Button(onClick = {
+                        scope.launch {
+                            val check = dao.getFullRevisionHistory(filename).first()
+                            println("Manual Check within UI: Found ${check.size} items for '$filename'")
+                        }
+                    }) {
+                        Text("Force Manual Check")
+                    }
+                } else {
+                    LazyColumn {
+                        items(revHistory) { item ->
+                            Text("Rev ${item.revNumber}: ${item.revDate}")
+                        }
+                    }
+                }
+            }
         }
     }
-
 }
-
-
-
-}
-
-
-
-
-
-
-
 
 fun openFile(name: String, folder: File) {
     val list = folder.listFiles()
