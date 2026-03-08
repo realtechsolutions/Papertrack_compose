@@ -117,5 +117,18 @@ interface DocumentRevisionDao {
      fun getFullRevisionHistory(targetFileName: String): Flow<List<DocumentRevision>>
 
 
-}
 
+    @Query("SELECT * FROM DocumentRevision WHERE filename = :filename ORDER BY revNumber DESC LIMIT 3")
+    fun getLast3Versions(filename: String): Flow<List<DocumentRevision>>
+
+    }
+
+@Dao
+interface DocumentFolderDao {
+  @Insert(onConflict = OnConflictStrategy.REPLACE)
+  suspend fun save (info: DocumentsFolder)
+
+  @Query("SELECT * FROM DocumentFolders")
+   fun getAll() :Flow<List<DocumentsFolder>>
+
+}

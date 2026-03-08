@@ -12,9 +12,20 @@ fun FrameWindowScope.AppMenuBar(
 ) {
     MenuBar {
         Menu(" Documents    ", mnemonic = 'F') {
-//            Item("Open Folder", onClick = onFolderOpen)
-//            Separator()
-//            Item("Exit", onClick = onExit)
+            Item(" Add your documents folder and start again to refresh ", onClick = {
+                val userFolder =openFolderPicker()
+                println("Opening $userFolder")
+            })
+            Separator()
+            Item("Exit", onClick = onExit)
+        }
+
+        Menu(text = "Add company info."){
+            Item(" Add company logo ", onClick = {})
+            Separator()
+            Item(" Add company name ", onClick = {})
+            Separator()
+            Item(" Add company address ", onClick = {})
         }
 
         Menu(" Org Chart    ") {

@@ -27,6 +27,7 @@ FileTreeItem(folder,true)
 
 
 showRevisionHistory(filename =currentFileName.value)
+        showPreviousVersions(filename = currentFileName.value)
 
                }
 

@@ -8,6 +8,7 @@ import `in`.realtechsolns.papertrack.data.AppDatabase
 import `in`.realtechsolns.papertrack.data.CompanyDao
 import `in`.realtechsolns.papertrack.data.CompanyInfo
 import `in`.realtechsolns.papertrack.data.DocumentRevisionDao
+import `in`.realtechsolns.papertrack.data.DocumentsFolder
 //import `in`.realtechsolns.papertrack.data.User
 import `in`.realtechsolns.papertrack.data.getDatabaseBuilder
 import kotlinx.coroutines.CoroutineScope
@@ -30,6 +31,7 @@ lateinit var prefs: Preferences
 lateinit var db: AppDatabase
 lateinit var companyDao: CompanyDao
 lateinit var documentRevisionDao : DocumentRevisionDao
+lateinit var documentsFolderDao : DocumentsFolder
 fun main() {
 
     val scope = CoroutineScope(Dispatchers.IO)
@@ -40,6 +42,7 @@ fun main() {
 
          companyDao = db.companyDao()
         documentRevisionDao = db.documentRevisionDao()
+        documentsFolderDao = db.documentsFolderDao()
 
             companyDao.insert(CompanyInfo(name = "ABC Ltd", address = "999 Industrial area", contactNo = "99999"))
             //val company  = companyDao.getAll()

@@ -87,17 +87,15 @@ val editOrgChart :File = File(userHome, "Papertracks/orgChart/orgChart/edit.html
 
 val desktop: Desktop? = Desktop.getDesktop()
 var isRevHistoryVisible =   mutableStateOf(false)
-//lateinit var revHistory : State<List<DocumentRevision>>
+var isPreviousVersionVisible = mutableStateOf(false)
 var currentFileName  = mutableStateOf("")
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun FileTreeItem(file: File, initialExpanded: Boolean = false,dao: DocumentRevisionDao= documentRevisionDao) {
     var isExpanded by remember { mutableStateOf(initialExpanded) }
     val scope = rememberCoroutineScope()
-
     Column(modifier = Modifier.padding(start = 16.dp)) {
         var isMenuVisible by remember { mutableStateOf(false) }
-
 
         CursorDropdownMenu(
             expanded = isMenuVisible,
@@ -128,7 +126,11 @@ fun FileTreeItem(file: File, initialExpanded: Boolean = false,dao: DocumentRevis
             )
             DropdownMenuItem(
                 text = { Text("View previous versions") },
-                onClick = { /* handle */ isMenuVisible = false }
+                onClick = { /* handle */ isMenuVisible = false
+                    isPreviousVersionVisible.value = !isPreviousVersionVisible.value
+                currentFileName.value = file.name
+
+                }
             )
         }
 
@@ -161,7 +163,6 @@ fun FileTreeItem(file: File, initialExpanded: Boolean = false,dao: DocumentRevis
                         }
                     }
                 }
-
 
                 .fillMaxWidth()
                 .padding(4.dp)
@@ -543,45 +544,6 @@ private fun updateFile(file: File, scope: CoroutineScope, dao:DocumentRevisionDa
 
 }
 
-//@Composable
-//fun showRevisionHistory(dao: DocumentRevisionDao= documentRevisionDao,filename:String){
-//    val revHistory = dao.getFullRevisionHistory(filename).collectAsState(initial = emptyList())
-//    if (isRevHistoryVisible.value){
-//
-//        DialogWindow(onCloseRequest = {isRevHistoryVisible.value = !isRevHistoryVisible.value},
-//            title = "Revision History",state = rememberDialogState(size = DpSize(700.dp,500.dp))
-//            ) {
-//
-//                //var isinitialized = ::revHistory.isInitialize
-//                //if (isinitialized)
-//
-//
-//
-//                LazyColumn {
-//                    if ((revHistory.value).isEmpty()) {println ("emptyList") }
-//                    items(revHistory.value) { item ->
-//                        Text("")
-//
-//                        Row {
-//
-//                            Text(text = "Rev. Number : ${item.revNumber}")
-//                            Text("Revision Date:${item.revDate}")
-//                            Text(" Rev. reason: ${item.revReason}")
-//                        }
-//                        //Text("Rev: ${item.revNumber} | Date: ${item.revDate}")
-//                    }
-//
-//                }
-//
-//
-//        }
-//    }
-//
-//}
-//
-//
-
-
 @Composable
 fun showRevisionHistory(dao: DocumentRevisionDao = documentRevisionDao, filename: String) {
     val scope = rememberCoroutineScope()
@@ -617,7 +579,7 @@ fun showRevisionHistory(dao: DocumentRevisionDao = documentRevisionDao, filename
                 } else {
                     LazyColumn {
                         items(revHistory) { item ->
-                            Text("Rev ${item.revNumber}: ${item.revDate}")
+                            Text("Rev. No. ${item.revNumber}  Rev. Date: ${item.revDate} Rev. reason : ${item.revReason} ")
                         }
                     }
                 }
@@ -625,6 +587,57 @@ fun showRevisionHistory(dao: DocumentRevisionDao = documentRevisionDao, filename
         }
     }
 }
+
+@Composable
+fun showPreviousVersions(dao: DocumentRevisionDao = documentRevisionDao, filename: String) {
+    val scope = rememberCoroutineScope()
+    // 1. Force the Flow to re-bind whenever the filename changes
+    val last3Versions  by remember(filename) {
+        dao.getLast3Versions(filename)
+    }.collectAsState(initial = emptyList())
+
+    if (isPreviousVersionVisible.value) {
+        DialogWindow(
+            onCloseRequest = { isPreviousVersionVisible.value = false },
+            title = "View Last 3 versions  for $filename"
+        ) {
+            Column(Modifier.fillMaxSize().padding(16.dp)) {
+
+                // --- DEBUG SECTION ---
+                LaunchedEffect(filename) {
+                    println("UI is querying for: '$filename'")
+                }
+
+                if (last3Versions.isEmpty()) {
+                    Text("No history for '$filename'", )
+
+                    // Button to force a manual check
+                    Button(onClick = {
+                        scope.launch {
+                            val check = dao.getFullRevisionHistory(filename).first()
+                            println("Manual Check within UI: Found ${check.size} items for '$filename'")
+                        }
+                    }) {
+                        Text("Force Manual Check")
+                    }
+                } else {
+                    LazyColumn {
+                        items(last3Versions) { item ->
+                            Text(text ="Rev. No. ${item.revNumber}  Rev. Date: ${item.revDate} Rev. reason : ${item.revReason}",
+                            modifier = Modifier.clickable(onClick = {
+                                val f = File (item.filePath)
+                                Desktop.getDesktop().open(f)
+                            })
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 
 fun openFile(name: String, folder: File) {
     val list = folder.listFiles()
@@ -847,6 +860,8 @@ fun searchFolder(name: String, folder: File): File? {
 //    // Make the frame visible
 //    frame.isVisible = true
 //}
+
+
 
 
 

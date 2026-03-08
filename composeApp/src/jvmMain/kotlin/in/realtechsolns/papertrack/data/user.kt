@@ -4,13 +4,18 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.util.TableInfo
+import `in`.realtechsolns.papertrack.userHome
+import java.io.File
 
-//@Entity
-//data class User(
-//    @PrimaryKey(autoGenerate = true)
-//    val id: Int = 0,
-//    val name: String
-//)
+@Entity
+data class DocumentsFolder(
+   // @PrimaryKey(autoGenerate = true)
+    val id: Int = 1,
+    val userFolder: String,
+    val defaultFolderPath : String = File(userHome, "Papertracks/Docs/Docs").absolutePath
+
+)
+
 @Entity  (indices = [Index(value = ["name"], unique = true)])
 data class CompanyInfo (
     @PrimaryKey(autoGenerate = true)
