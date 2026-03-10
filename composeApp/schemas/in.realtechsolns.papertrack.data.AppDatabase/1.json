@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "cba7219f97dc86ad70aa6e918c57f159",
+    "identityHash": "71d96f69b708ac1f40cf75e4f19e7b3f",
     "entities": [
       {
         "tableName": "CompanyInfo",
@@ -131,11 +131,41 @@
             "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_DocumentRevision_documentNo_revNumber` ON `${TABLE_NAME}` (`documentNo`, `revNumber`)"
           }
         ]
+      },
+      {
+        "tableName": "DocumentsFolder",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `userFolder` TEXT NOT NULL, `defaultFolderPath` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userFolder",
+            "columnName": "userFolder",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultFolderPath",
+            "columnName": "defaultFolderPath",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cba7219f97dc86ad70aa6e918c57f159')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '71d96f69b708ac1f40cf75e4f19e7b3f')"
     ]
   }
 }

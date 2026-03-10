@@ -1,20 +1,28 @@
 package `in`.realtechsolns.papertrack
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
+import `in`.realtechsolns.papertrack.data.DocumentsFolder
+import kotlinx.coroutines.launch
 
 @Composable
 fun FrameWindowScope.AppMenuBar(
+
     onFolderOpen: () -> Unit,
     onRefresh: () -> Unit,
     onExit: () -> Unit
 ) {
+    val scope = rememberCoroutineScope()
     MenuBar {
         Menu(" Documents    ", mnemonic = 'F') {
             Item(" Add your documents folder and start again to refresh ", onClick = {
                 val userFolder =openFolderPicker()
                 println("Opening $userFolder")
+                scope.launch {
+                    userFolder?.let { documentsFolderDao.save(DocumentsFolder(userFolder = it)) }
+                }
             })
             Separator()
             Item("Exit", onClick = onExit)

@@ -7,6 +7,7 @@ import androidx.room.Database
 import `in`.realtechsolns.papertrack.data.AppDatabase
 import `in`.realtechsolns.papertrack.data.CompanyDao
 import `in`.realtechsolns.papertrack.data.CompanyInfo
+import `in`.realtechsolns.papertrack.data.DocumentFolderDao
 import `in`.realtechsolns.papertrack.data.DocumentRevisionDao
 import `in`.realtechsolns.papertrack.data.DocumentsFolder
 //import `in`.realtechsolns.papertrack.data.User
@@ -31,7 +32,7 @@ lateinit var prefs: Preferences
 lateinit var db: AppDatabase
 lateinit var companyDao: CompanyDao
 lateinit var documentRevisionDao : DocumentRevisionDao
-lateinit var documentsFolderDao : DocumentsFolder
+lateinit var documentsFolderDao : DocumentFolderDao
 fun main() {
 
     val scope = CoroutineScope(Dispatchers.IO)
@@ -54,7 +55,7 @@ fun main() {
     }
 
     prefs = Preferences.userRoot().node("MyAppPreferences")
-    LuceneManager.initialize()
+   // LuceneManager.initialize()
     application {
         Window(
             onCloseRequest = ::exitApplication,

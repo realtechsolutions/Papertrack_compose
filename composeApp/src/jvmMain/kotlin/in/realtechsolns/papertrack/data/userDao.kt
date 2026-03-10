@@ -128,7 +128,7 @@ interface DocumentFolderDao {
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   suspend fun save (info: DocumentsFolder)
 
-  @Query("SELECT * FROM DocumentFolders")
+  @Query("SELECT * FROM DocumentsFolder")
    fun getAll() :Flow<List<DocumentsFolder>>
 
 }

@@ -81,7 +81,7 @@ import javax.swing.tree.DefaultMutableTreeNode
 import kotlin.system.exitProcess
 
 val userHome: String? = System.getProperty("user.home")
-var folder: File = File(userHome, "Papertracks/Docs/Docs")
+var folder =mutableStateOf( File(userHome, "Papertracks/Docs/Docs"))
 val orgChart :File = File(userHome, "Papertracks/orgChart/orgChart/index.html")
 val editOrgChart :File = File(userHome, "Papertracks/orgChart/orgChart/edit.html")
 
@@ -115,6 +115,7 @@ fun FileTreeItem(file: File, initialExpanded: Boolean = false,dao: DocumentRevis
                      isRevHistoryVisible.value = !isRevHistoryVisible.value
                      val revHistory = dao.getFullRevisionHistory(file.name).first()
                       // dao.getFullRevisionHistory(file.name)
+                     println(revHistory)
                      currentFileName.value = file.name
                   revHistory.forEach {
                         println(" Rev. No. :${it.revNumber} Rev. Date: ${it.revDate} Revision Reason :${it.revReason}")
@@ -687,19 +688,19 @@ fun delete(fileName: String, folder: File) {
 // this functions takes a strings for folder name and file names and also takes a folder of type File
 // it the creates a list of file in top folder and add file to folder name folder in top folder
 // through a recurssive call
-fun addFile(folderName: String, fileName: String, topFolder: File? = folder) {
-    val list = topFolder?.listFiles() ?: return
-    for (file in list) {
-        if (file.isDirectory && folderName.equals(file.name, ignoreCase = true)) {
-            createFile(file, fileName)
-            return // Exit the function after finding the folder
-        } else if (file.isDirectory) {
-            addFile(folderName, fileName, file) // Recursively search in subdirectories
-        } else if (file.isFile) {
-            println("add to folder")
-        }
-    }
-}
+//fun addFile(folderName: String, fileName: String, topFolder: File? = folder) {
+//    val list = topFolder?.listFiles() ?: return
+//    for (file in list) {
+//        if (file.isDirectory && folderName.equals(file.name, ignoreCase = true)) {
+//            createFile(file, fileName)
+//            return // Exit the function after finding the folder
+//        } else if (file.isDirectory) {
+//            addFile(folderName, fileName, file) // Recursively search in subdirectories
+//        } else if (file.isFile) {
+//            println("add to folder")
+//        }
+//    }
+//}
 
 //this function takes a folder and file name string and creates a word doc object . It creates a file in folder
 // given as parameter in create File function and the create output stream of this file and finally write

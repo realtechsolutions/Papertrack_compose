@@ -18,12 +18,28 @@ import org.jetbrains.compose.resources.painterResource
 
 import papertrack.composeapp.generated.resources.Res
 import papertrack.composeapp.generated.resources.compose_multiplatform
+import java.io.File
 
 @Composable
 @Preview
 fun App() {
+    val listfoldertoShow = documentsFolderDao
+        .getAll()
+        .collectAsState(initial = emptyList())
+
+    val userfolderpath = listfoldertoShow.value.firstOrNull()
+
+    val userFolder = userfolderpath?.let {
+        File(it.userFolder)
+    }
+
     MaterialTheme {
-FileTreeItem(folder,true)
+        if (userFolder != null) {
+            folder.value = userFolder
+        }
+println(userFolder)
+println(folder.value)
+FileTreeItem(folder.value,true)
 
 
 showRevisionHistory(filename =currentFileName.value)

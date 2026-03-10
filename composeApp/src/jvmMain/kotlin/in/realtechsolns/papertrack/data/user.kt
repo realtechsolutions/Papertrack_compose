@@ -9,7 +9,7 @@ import java.io.File
 
 @Entity
 data class DocumentsFolder(
-   // @PrimaryKey(autoGenerate = true)
+    @PrimaryKey
     val id: Int = 1,
     val userFolder: String,
     val defaultFolderPath : String = File(userHome, "Papertracks/Docs/Docs").absolutePath

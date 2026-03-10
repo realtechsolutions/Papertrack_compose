@@ -12,5 +12,5 @@ abstract class AppDatabase : RoomDatabase() {
    // abstract fun userDao(): UserDao
     abstract fun companyDao(): CompanyDao
     abstract fun documentRevisionDao(): DocumentRevisionDao
-    abstract fun documentsFolderDao(): DocumentsFolder
+    abstract fun documentsFolderDao(): DocumentFolderDao
 }
