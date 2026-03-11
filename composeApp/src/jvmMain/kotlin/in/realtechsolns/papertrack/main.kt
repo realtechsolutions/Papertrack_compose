@@ -1,34 +1,22 @@
 package `in`.realtechsolns.papertrack
 
-import androidx.compose.runtime.rememberCoroutineScope
+//import `in`.realtechsolns.papertrack.data.User
+
+import androidx.compose.foundation.Image
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import androidx.room.Database
-import `in`.realtechsolns.papertrack.data.AppDatabase
-import `in`.realtechsolns.papertrack.data.CompanyDao
-import `in`.realtechsolns.papertrack.data.CompanyInfo
-import `in`.realtechsolns.papertrack.data.DocumentFolderDao
-import `in`.realtechsolns.papertrack.data.DocumentRevisionDao
-import `in`.realtechsolns.papertrack.data.DocumentsFolder
-//import `in`.realtechsolns.papertrack.data.User
-import `in`.realtechsolns.papertrack.data.getDatabaseBuilder
+import `in`.realtechsolns.papertrack.data.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import org.jetbrains.compose.resources.painterResource
 import papertrack.composeapp.generated.resources.Res
-import java.awt.BorderLayout
-import java.awt.Color
-import java.awt.image.BufferedImage
+import papertrack.composeapp.generated.resources.papertrackcompanylogo
 import java.io.File
-import java.util.prefs.Preferences
 import java.util.zip.ZipInputStream
-import javax.swing.JFrame
-import javax.swing.JPanel
-import javax.swing.SwingUtilities
-import javax.swing.WindowConstants
 
-lateinit var prefs: Preferences
+//lateinit var prefs: Preferences
 lateinit var db: AppDatabase
 lateinit var companyDao: CompanyDao
 lateinit var documentRevisionDao : DocumentRevisionDao
@@ -36,6 +24,7 @@ lateinit var documentsFolderDao : DocumentFolderDao
 fun main() {
 
     val scope = CoroutineScope(Dispatchers.IO)
+    var title = mutableStateOf("Papertrack")
     scope.launch {
         db = getDatabaseBuilder()
             .fallbackToDestructiveMigration(true)
@@ -45,21 +34,24 @@ fun main() {
         documentRevisionDao = db.documentRevisionDao()
         documentsFolderDao = db.documentsFolderDao()
 
-            companyDao.insert(CompanyInfo(name = "ABC Ltd", address = "999 Industrial area", contactNo = "99999"))
+            //companyDao.insert(CompanyInfo(name = "ABC Ltd", address = "999 Industrial area", contactNo = "99999"))
             //val company  = companyDao.getAll()
            // println(company)
         copyFolderToUserSystem("Docs","Papertracks/Docs")
         copyFolderToUserSystem("orgChart","Papertracks/orgChart")
-
+        title.value = companyDao.getAll().first().name
         //copyDocsUserSystem()
     }
 
-    prefs = Preferences.userRoot().node("MyAppPreferences")
+    //prefs = Preferences.userRoot().node("MyAppPreferences")
    // LuceneManager.initialize()
+
+
     application {
         Window(
             onCloseRequest = ::exitApplication,
             title = "Papertrack",
+            icon = painterResource(Res.drawable.papertrackcompanylogo)
         ) {
                AppMenuBar(
                    onFolderOpen = { /* logic */ },

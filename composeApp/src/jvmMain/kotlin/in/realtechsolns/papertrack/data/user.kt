@@ -20,9 +20,9 @@ data class DocumentsFolder(
 data class CompanyInfo (
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-  val name: String,
-    val address: String,
-    val contactNo :String
+  val name: String = "ABC Ltd.",
+    val address: String = " 99 ,Industrial Area XYZ",
+    val contactNo :String = "9999999"
 
 
 )

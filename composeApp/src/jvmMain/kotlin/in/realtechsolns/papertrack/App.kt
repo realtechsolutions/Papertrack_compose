@@ -21,31 +21,11 @@ import papertrack.composeapp.generated.resources.compose_multiplatform
 import java.io.File
 
 @Composable
-@Preview
+//@Preview
 fun App() {
-    val listfoldertoShow = documentsFolderDao
-        .getAll()
-        .collectAsState(initial = emptyList())
-
-    val userfolderpath = listfoldertoShow.value.firstOrNull()
-
-    val userFolder = userfolderpath?.let {
-        File(it.userFolder)
-    }
-
     MaterialTheme {
-        if (userFolder != null) {
-            folder.value = userFolder
-        }
-println(userFolder)
-println(folder.value)
-FileTreeItem(folder.value,true)
-
-
-showRevisionHistory(filename =currentFileName.value)
+        FileTreeItem(folder.value, true)
+        showRevisionHistory(filename = currentFileName.value)
         showPreviousVersions(filename = currentFileName.value)
-
-               }
-
-
+    }
 }

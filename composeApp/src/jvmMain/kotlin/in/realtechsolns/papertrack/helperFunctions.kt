@@ -716,15 +716,15 @@ fun createFile(folder: File, fileName: String) {
     val headerRun = headerContent.createRun()
     val footerContent = footer.createParagraph()
     val footerRun = footerContent.createRun()
-    val image: FileInputStream = FileInputStream(
-        prefs.get(
-            "logoImage",
-            ""
-        ).toString()
-    )
-    headerRun.addPicture(image, XWPFDocument.PICTURE_TYPE_PNG, "img", Units.toEMU(30.0), Units.toEMU(30.0))
-    val companyName = prefs.get("companyName", "ABC Ltd")
-    headerRun.setText(companyName)
+//    val image: FileInputStream = FileInputStream(
+//        prefs.get(
+//            "logoImage",
+//            ""
+//        ).toString()
+//    )
+   // headerRun.addPicture(image, XWPFDocument.PICTURE_TYPE_PNG, "img", Units.toEMU(30.0), Units.toEMU(30.0))
+    //val companyName = prefs.get("companyName", "ABC Ltd")
+   // headerRun.setText(companyName)
     headerRun.addBreak()
     headerRun.setText("Document No: ${docInfo?.get(1)} ")
     headerRun.addBreak()
