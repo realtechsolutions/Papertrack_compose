@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CompanyDao  {
-    @Insert (onConflict = OnConflictStrategy.IGNORE)
+    @Insert (onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(info: CompanyInfo)
 
     @Query("SELECT * FROM CompanyInfo")
@@ -132,3 +132,11 @@ interface DocumentFolderDao {
    fun getAll() :Flow<List<DocumentsFolder>>
 
 }
+
+@Dao
+interface ContentSearchDao {
+@Transaction
+@Insert
+suspend fun insertContent (content :List < ContentSearch>)
+}
+

@@ -44,7 +44,7 @@ fun main() {
     }
 
     //prefs = Preferences.userRoot().node("MyAppPreferences")
-   // LuceneManager.initialize()
+    //LuceneManager.initialize()
 
 
     application {
@@ -57,8 +57,6 @@ fun main() {
                    onFolderOpen = { /* logic */ },
                    onRefresh = { /* logic */ },
                    onExit = ::exitApplication
-
-
                )
             App()
         }

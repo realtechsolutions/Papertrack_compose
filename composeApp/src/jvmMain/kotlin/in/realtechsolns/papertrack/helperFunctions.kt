@@ -863,6 +863,41 @@ fun searchFolder(name: String, folder: File): File? {
 //}
 
 
+fun getAllDocxContents(folderPath: String): List<String> {
+    val result = mutableListOf<String>()
+    val root = File(folderPath)
+
+    if (!root.exists()) return emptyList()
+
+    root.walkTopDown().forEach { file ->
+        if (file.isFile && file.extension.equals("docx", ignoreCase = true)) {
+            val text = extractTextFromDocx(file)
+            if (text.isNotBlank()) {
+                result.add(text)
+            }
+        }
+    }
+
+    return result
+}
+
+fun extractTextFromDocx(file: File): String {
+    return try {
+        XWPFDocument(file.inputStream()).use { document ->
+            val paragraphs = document.paragraphs
+            val text = StringBuilder()
+
+            for (para in paragraphs) {
+                text.append(para.text).append("\n")
+            }
+
+            text.toString()
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        ""
+    }
+}
 
 
 

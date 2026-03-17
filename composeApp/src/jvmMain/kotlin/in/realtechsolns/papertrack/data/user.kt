@@ -1,6 +1,7 @@
 package `in`.realtechsolns.papertrack.data
 
 import androidx.room.Entity
+import androidx.room.Fts4
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.util.TableInfo
@@ -18,13 +19,11 @@ data class DocumentsFolder(
 
 @Entity  (indices = [Index(value = ["name"], unique = true)])
 data class CompanyInfo (
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    @PrimaryKey
+    val id: Int = 1,
   val name: String = "ABC Ltd.",
     val address: String = " 99 ,Industrial Area XYZ",
     val contactNo :String = "9999999"
-
-
 )
 
 @Entity
@@ -40,8 +39,25 @@ data class DocumentRevision (
     val revDate: String = "",
     val revReason : String ,
     val title : String,
-  val fileName : String,
+    val fileName : String,
     val filePath : String
+
+)
+
+@Entity
+data class DocumentSearch (
+    @PrimaryKey(autoGenerate = true)
+    val id : Long = 0,
+    val documentNo: String = "",
+    val revNo : Int = 0,
+    val revDate  : String = "",
+    val fileName : String  = ""
+   )
+
+@Entity
+@Fts4
+data class  ContentSearch (
+    val content : String
 
 )
 
