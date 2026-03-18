@@ -85,7 +85,14 @@ fun FrameWindowScope.AppMenuBar(
 
         Menu(" Search   ") {
             Item("Add your documents for search", onClick = {
-                LuceneManager.reinitialize()
+                //LuceneManager.reinitialize()
+                scope.launch {
+                val documentSearchItemsList = getAllDocxContents(folder.value.absolutePath)
+                documentSearchDa0.insertDocumentSearchItems(documentSearchItemsList)
+               println(" debugging $documentSearchItemsList")
+
+                }
+
             })
             Item("Search by document no.", onClick = {
                 val query: Query = LuceneManager.docNoParser.parse(JOptionPane.showInputDialog("Enter document no.:"))

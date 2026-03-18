@@ -42,6 +42,7 @@ import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.rememberDialogState
 import `in`.realtechsolns.papertrack.data.DocumentRevision
 import `in`.realtechsolns.papertrack.data.DocumentRevisionDao
+import `in`.realtechsolns.papertrack.data.DocumentSearch
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -863,8 +864,8 @@ fun searchFolder(name: String, folder: File): File? {
 //}
 
 
-fun getAllDocxContents(folderPath: String): List<String> {
-    val result = mutableListOf<String>()
+fun getAllDocxContents(folderPath: String): List<DocumentSearch> {
+    val result = mutableListOf<DocumentSearch>()
     val root = File(folderPath)
 
     if (!root.exists()) return emptyList()
@@ -873,7 +874,8 @@ fun getAllDocxContents(folderPath: String): List<String> {
         if (file.isFile && file.extension.equals("docx", ignoreCase = true)) {
             val text = extractTextFromDocx(file)
             if (text.isNotBlank()) {
-                result.add(text)
+                val listItem = DocumentSearch(content = text, fileName =file.name )
+                result.add(listItem)
             }
         }
     }

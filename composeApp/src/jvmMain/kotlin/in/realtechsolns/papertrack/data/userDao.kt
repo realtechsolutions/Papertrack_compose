@@ -140,3 +140,9 @@ interface ContentSearchDao {
 suspend fun insertContent (content :List < ContentSearch>)
 }
 
+@Dao
+interface DocumentSearchDao {
+    @Transaction
+    @Insert
+    suspend fun insertDocumentSearchItems (items :List < DocumentSearch>)
+}

@@ -21,10 +21,12 @@ lateinit var db: AppDatabase
 lateinit var companyDao: CompanyDao
 lateinit var documentRevisionDao : DocumentRevisionDao
 lateinit var documentsFolderDao : DocumentFolderDao
+lateinit var documentSearchDa0 : DocumentSearchDao
+lateinit var contentSearchDa : ContentSearchDao
 fun main() {
 
     val scope = CoroutineScope(Dispatchers.IO)
-    var title = mutableStateOf("Papertrack")
+    val title = mutableStateOf("Papertrack")
     scope.launch {
         db = getDatabaseBuilder()
             .fallbackToDestructiveMigration(true)
@@ -33,13 +35,15 @@ fun main() {
          companyDao = db.companyDao()
         documentRevisionDao = db.documentRevisionDao()
         documentsFolderDao = db.documentsFolderDao()
+        documentSearchDa0 = db.documentSearchDao()
+        contentSearchDa = db.contentSearchDao()
 
             //companyDao.insert(CompanyInfo(name = "ABC Ltd", address = "999 Industrial area", contactNo = "99999"))
             //val company  = companyDao.getAll()
            // println(company)
         copyFolderToUserSystem("Docs","Papertracks/Docs")
         copyFolderToUserSystem("orgChart","Papertracks/orgChart")
-        title.value = companyDao.getAll().first().name
+        //title.value = companyDao.getAll().first().name
         //copyDocsUserSystem()
     }
 

@@ -51,13 +51,14 @@ data class DocumentSearch (
     val documentNo: String = "",
     val revNo : Int = 0,
     val revDate  : String = "",
-    val fileName : String  = ""
+    val fileName : String  = "",
+    val content : String = ""
    )
 
 @Entity
-@Fts4
+@Fts4(contentEntity = DocumentSearch ::class)
 data class  ContentSearch (
-    val content : String
+    val content : String =""
 
 )
 
