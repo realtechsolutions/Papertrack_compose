@@ -4,33 +4,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material.Button
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
 import `in`.realtechsolns.papertrack.data.CompanyInfo
 import `in`.realtechsolns.papertrack.data.DocumentsFolder
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import org.apache.lucene.document.Document
-import org.apache.lucene.search.Query
-import org.apache.lucene.search.TopDocs
-import java.awt.BorderLayout
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
+import kotlinx.coroutines.withContext
 import java.io.File
-import javax.swing.DefaultListModel
-import javax.swing.JFrame
-import javax.swing.JList
 import javax.swing.JOptionPane
-import javax.swing.JScrollPane
 
 @Composable
 fun FrameWindowScope.AppMenuBar(
@@ -39,11 +24,15 @@ fun FrameWindowScope.AppMenuBar(
     onRefresh: () -> Unit,
     onExit: () -> Unit
 ) {
+
     val scope = rememberCoroutineScope()
     var showCompanyDataInput by remember { mutableStateOf(false) }
     var showSearchResult by remember { mutableStateOf(false) }
+   // var showLoader by remember { mutableStateOf(false) }
     val inputs = remember { mutableStateListOf("", "", "") }
     val labels = remember { mutableStateListOf<String>("Name", "Address", "Phone Number") }
+    var fileSearchResults by remember { mutableStateOf<List<String>>(emptyList()) }
+
     MenuBar {
         Menu(" Documents    ", mnemonic = 'F') {
             Item(" Add your documents folder and  refresh ", onClick = {
@@ -73,11 +62,7 @@ fun FrameWindowScope.AppMenuBar(
             Item(" Add company data ", onClick = {
                 showCompanyDataInput = !showCompanyDataInput
             })
-
         }
-
-
-
         Menu(" Org Chart    ") {
             Item("View", onClick = { desktop?.open(orgChart) })
             Item("Edit ", onClick = { desktop?.open(editOrgChart) })
@@ -87,32 +72,61 @@ fun FrameWindowScope.AppMenuBar(
             Item("Add your documents for search", onClick = {
                 //LuceneManager.reinitialize()
                 scope.launch {
-                val documentSearchItemsList = getAllDocxContents(folder.value.absolutePath)
-                documentSearchDa0.insertDocumentSearchItems(documentSearchItemsList)
-               println(" debugging $documentSearchItemsList")
+                    showLoaderSearchFiles.value =!showLoaderSearchFiles.value
+                    withContext(Dispatchers.IO){
+                        val documentSearchItemsList = getAllDocxContents(folder.value.absolutePath)
+                        documentSearchDa0.deleteAll()
+                        documentSearchDa0.insertDocumentSearchItems(documentSearchItemsList)
 
+                    }
+
+
+              // println(" debugging $documentSearchItemsList")
+                showLoaderSearchFiles.value = !showLoaderSearchFiles.value
                 }
 
             })
             Item("Search by document no.", onClick = {
-                val query: Query = LuceneManager.docNoParser.parse(JOptionPane.showInputDialog("Enter document no.:"))
-                val results = LuceneManager.searcher.search(query, 10)
+              val userQuery = JOptionPane.showInputDialog("Enter document Number to search")
+                scope.launch {
+               fileSearchResults = documentSearchDa0.getFilePathsFlexible(userQuery) }
+               showSearchResult = !showSearchResult
+            })
+            Item("Search by revision no.", onClick = {
+                val userQuery = JOptionPane.showInputDialog("Enter revision Number to search")
+                scope.launch {
+                    fileSearchResults = documentSearchDa0.getFilePathsFlexible(revNo = userQuery.toInt()) }
+                showSearchResult = !showSearchResult
 
-                for (scoreDoc in results.scoreDocs) {
+            })
+            Item("Search by document title", onClick ={
+                val userQuery = JOptionPane.showInputDialog("Enter title to search")
+                scope.launch {
+                    fileSearchResults = documentSearchDa0.getFilePathsFlexible(title =userQuery) }
+                showSearchResult = !showSearchResult
+            })
 
-                //val doc : Document= LuceneManager.searcher.get
-                    val doc = LuceneManager.searcher.storedFields().document(scoreDoc.doc)
-                    var fileName = doc["fileName"]
-                    println(doc)
-                    println(fileName)
-                }
+            Item("Search by revision date.", onClick = {
+                val userQuery = JOptionPane.showInputDialog("Enter revision date to search")
+                scope.launch {
+                    fileSearchResults = documentSearchDa0.getFilePathsFlexible(revDate = userQuery) }
+                showSearchResult = !showSearchResult
+
+            })
+
+            Item("Search by text", onClick = {
+
+               val userQuery = JOptionPane.showInputDialog("Enter text to search")
+              scope.launch {
+               //println   (contentSearchDa.searchByText(userQuery))
+               //println   (contentSearchDao.getFileNamesByText(userQuery))
+                 fileSearchResults =  contentSearchDao.getFileNamesByText(userQuery)
+                  showSearchResult = !showSearchResult
+
+              }
 
 
             })
-            Item("Search by revision no.", onClick = {})
-            Item("Search by document title", onClick ={})
-            Item("Search by revision date.", onClick = {})
-            Item("Search by text", onClick = {})
         }
 
         Menu(" Help     ") {
@@ -122,26 +136,26 @@ fun FrameWindowScope.AppMenuBar(
             Item("Help2", onClick = onRefresh)
         }
 
-        Menu("Ask questions ") {
-            Item("Add updated document to search", onClick = {LuceneManager.reinitialize()})
-            Item("Search for document number", onClick = {
-                val query: Query = LuceneManager.docNoParser.parse(JOptionPane.showInputDialog("Enter document no.:"))
-                val results = LuceneManager.searcher.search(query, 10)
-                showSearchResults(results)
-
-            })
-            Item("search for file name", onClick = onRefresh)
-            Item("Search for Revision number", onClick = onRefresh)
-            Item("Search for revision date ", onClick = onRefresh)
-            Item("Search for text", onClick = {
-
-                val userInput = JOptionPane.showInputDialog("Enter your search query:")
-                val query = LuceneManager.textParser.parse(userInput)
-                val results = LuceneManager.searcher.search(query, 10)
-                showSearchResults(results)
-            })
-
-        }
+//        Menu("Ask questions ") {
+//            Item("Add updated document to search", onClick = {LuceneManager.reinitialize()})
+//            Item("Search for document number", onClick = {
+//                val query: Query = LuceneManager.docNoParser.parse(JOptionPane.showInputDialog("Enter document no.:"))
+//                val results = LuceneManager.searcher.search(query, 10)
+//                showSearchResults(results)
+//
+//            })
+//            Item("search for file name", onClick = onRefresh)
+//            Item("Search for Revision number", onClick = onRefresh)
+//            Item("Search for revision date ", onClick = onRefresh)
+//            Item("Search for text", onClick = {
+//
+//                val userInput = JOptionPane.showInputDialog("Enter your search query:")
+//                val query = LuceneManager.textParser.parse(userInput)
+//                val results = LuceneManager.searcher.search(query, 10)
+//                showSearchResults(results)
+//            })
+//
+//        }
 
     }
 
@@ -167,8 +181,6 @@ fun FrameWindowScope.AppMenuBar(
                         // inputs.fill("")
                         showCompanyDataInput = false
                     }
-
-
                 }) { Text("Save data") }
             }
 
@@ -176,84 +188,9 @@ fun FrameWindowScope.AppMenuBar(
     }
 
 
-//    fun showSearchResults(results: TopDocs) {
-//        val frame = JFrame("Search Results")
-//        frame.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
-//        frame.setSize(800, 400) // Create a list model to manage the list data
-//        val listModel = DefaultListModel<String>()
-//        val list = JList(listModel) // Add results to the list model
-//        for (scoreDoc in results.scoreDocs) {
-////        val doc = LuceneManager.searcher.doc(scoreDoc.doc)
-////        var fileName = doc["fileName"]
-////        fileName = fileName.substringBeforeLast('.')
-////        listModel.addElement(fileName)
-//        } // Add a mouse listener to handle item clicks
-//        list.addMouseListener(object : MouseAdapter() {
-//            override fun mouseClicked(e: MouseEvent) {
-//                val selectedIndex = list.selectedIndex
-//                if (selectedIndex != -1) {
-//                    val fileName = listModel.getElementAt(selectedIndex)
-//                    // Assuming you have a method to open the file by its name
-//                    // println(fileName)
-//                    openFile(fileName, folder.value)
-//                }
-//            }
-//        }
-//        )
-//        val scrollPane = JScrollPane(list)
-//        frame.add(
-//            scrollPane,
-//            BorderLayout.CENTER
-//        ) // Show the frame
-//        frame.isVisible = true
-//    }
-
-//    @Composable
-//    fun ShowSearchResults(
-//        results: TopDocs,
-//        folder: String,
-//        openFile: (String, String) -> Unit,
-//        onClose: () -> Unit
-//    ) {
-//
-//        val fileNames = remember(results) {
-//            results.scoreDocs.map { scoreDoc ->
-//                val doc = LuceneManager.searcher.doc(scoreDoc.doc)
-//                doc["fileName"].substringBeforeLast('.')
-//            }
-//        }
-//
-//        DialogWindow(
-//            onCloseRequest = onClose,
-//            title = "Search Results"
-//        ) {
-//
-//            Box(
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .padding(12.dp)
-//            ) {
-//
-//                LazyColumn {
-//
-//                    items(fileNames) { fileName ->
-//
-//                        Text(
-//                            text = fileName,
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .clickable {
-//                                    openFile(fileName, folder)
-//                                }
-//                                .padding(8.dp)
-//                        )
-//
-//                        Divider()
-//                    }
-//                }
-//            }
-//        }
-//    }
-
-
+    if(showSearchResult) {
+      DialogWindow(onCloseRequest = { showSearchResult= false }, title = "Search results", )   {
+FileListTextSearch(fileSearchResults)
+      }
+    }
 }

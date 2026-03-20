@@ -7,19 +7,10 @@ import androidx.room.Query
 import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
-//@Dao
-//interface UserDao {
-//
-//    @Insert (onConflict = OnConflictStrategy.IGNORE)
-//    suspend fun insert(user: User)
-//
-//    @Query("SELECT * FROM User")
-//    suspend fun getAll(): List<User>
-//}
 
 @Dao
-interface CompanyDao  {
-    @Insert (onConflict = OnConflictStrategy.REPLACE)
+interface CompanyDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(info: CompanyInfo)
 
     @Query("SELECT * FROM CompanyInfo")
@@ -35,16 +26,19 @@ interface DocumentRevisionDao {
 
 
     // Get next revision number
-    @Query("""
+    @Query(
+        """
         SELECT COALESCE(MAX(revNumber), 0) + 1
         FROM DocumentRevision
         WHERE documentNo = :docNo
-    """)
+    """
+    )
     suspend fun getNextRevisionNumber(docNo: String): Int
 
 
     // Delete older revisions (keep latest 5)
-    @Query("""
+    @Query(
+        """
         DELETE FROM DocumentRevision
         WHERE id NOT IN (
             SELECT id FROM DocumentRevision
@@ -53,7 +47,8 @@ interface DocumentRevisionDao {
             LIMIT 5
         )
         AND documentNo = :docNo
-    """)
+    """
+    )
     suspend fun deleteOlderRevisions(docNo: String)
 
 
@@ -63,7 +58,7 @@ interface DocumentRevisionDao {
         documentNo: String,
         revReason: String,
         title: String,
-        fileName : String,
+        fileName: String,
         filePath: String
     ) {
         val nextRev = getNextRevisionNumber(documentNo)
@@ -85,21 +80,25 @@ interface DocumentRevisionDao {
 
 
     // Get revisions
-    @Query("""
+    @Query(
+        """
         SELECT * FROM DocumentRevision
         WHERE documentNo = :docNo
         ORDER BY revNumber DESC
-    """)
+    """
+    )
     suspend fun getRevisionsOfDocument(docNo: String): List<DocumentRevision>
 
 
     // Get latest revision
-    @Query("""
+    @Query(
+        """
         SELECT * FROM DocumentRevision
         WHERE documentNo = :docNo
         ORDER BY revNumber DESC
         LIMIT 1
-    """)
+    """
+    )
     suspend fun getLatestRevision(docNo: String): DocumentRevision?
 
 
@@ -109,40 +108,76 @@ interface DocumentRevisionDao {
     @Query("SELECT filePath FROM DocumentRevision WHERE fileName = :fileName AND id NOT IN (SELECT id FROM DocumentRevision WHERE fileName = :fileName ORDER BY revNumber DESC LIMIT 3)")
     suspend fun getFilePathsToDelete(fileName: String): List<String>
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM DocumentRevision 
         WHERE fileName = :targetFileName 
         ORDER BY revNumber DESC
-    """)
-     fun getFullRevisionHistory(targetFileName: String): Flow<List<DocumentRevision>>
-
-
+    """
+    )
+    fun getFullRevisionHistory(targetFileName: String): Flow<List<DocumentRevision>>
 
     @Query("SELECT * FROM DocumentRevision WHERE filename = :filename ORDER BY revNumber DESC LIMIT 3")
     fun getLast3Versions(filename: String): Flow<List<DocumentRevision>>
 
-    }
+}
 
 @Dao
 interface DocumentFolderDao {
-  @Insert(onConflict = OnConflictStrategy.REPLACE)
-  suspend fun save (info: DocumentsFolder)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun save(info: DocumentsFolder)
 
-  @Query("SELECT * FROM DocumentsFolder")
-   fun getAll() :Flow<List<DocumentsFolder>>
+    @Query("SELECT * FROM DocumentsFolder")
+    fun getAll(): Flow<List<DocumentsFolder>>
+
 
 }
 
 @Dao
 interface ContentSearchDao {
-@Transaction
-@Insert
-suspend fun insertContent (content :List < ContentSearch>)
+    @Transaction
+    @Insert
+    suspend fun insertContent(content: List<ContentSearch>)
+
+    @Query("SELECT * FROM ContentSearch WHERE content match :query")
+    suspend fun searchByText(query: String): List<ContentSearch>
+
+    @Query(
+        """
+SELECT DS.filePath 
+FROM DocumentSearch AS DS
+JOIN ContentSearch ON ContentSearch.rowid = DS.id
+WHERE ContentSearch MATCH :query
+"""
+    )
+    suspend fun getFileNamesByText(query: String): List<String>
 }
+
 
 @Dao
 interface DocumentSearchDao {
     @Transaction
-    @Insert
-    suspend fun insertDocumentSearchItems (items :List < DocumentSearch>)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertDocumentSearchItems(items: List<DocumentSearch>)
+
+    @Query(
+        """
+        SELECT filePath FROM DocumentSearch 
+        WHERE (:documentNo IS NULL OR documentNo = :documentNo)
+        AND (:title IS NULL OR title LIKE '%' || :title || '%')
+        AND (:revNo IS NULL OR revNo = :revNo)
+        AND (:revDate IS NULL OR revDate = :revDate)
+    """
+    )
+    suspend fun getFilePathsFlexible(
+        documentNo: String? = null,
+        title: String? = null,
+        revNo: Int? = null,
+        revDate: String? = null
+    ): List<String>
+
+
+    @Query("DELETE FROM DocumentSearch")
+    suspend fun deleteAll()
+
 }

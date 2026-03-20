@@ -1,31 +1,23 @@
 package `in`.realtechsolns.papertrack
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import org.jetbrains.compose.resources.painterResource
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 
-import papertrack.composeapp.generated.resources.Res
-import papertrack.composeapp.generated.resources.compose_multiplatform
-import java.io.File
 
+var showLoaderSearchFiles = mutableStateOf(false)
 @Composable
 //@Preview
 fun App() {
     MaterialTheme {
-        FileTreeItem(folder.value, true)
-        showRevisionHistory(filename = currentFileName.value)
-        showPreviousVersions(filename = currentFileName.value)
+        Column {
+            FileTreeItem(folder.value, true)
+            showRevisionHistory(filename = currentFileName.value)
+            showPreviousVersions(filename = currentFileName.value)
+            if (showLoaderSearchFiles.value) {
+                showLoader("...Loading files for search")
+            }
+        }
     }
 }

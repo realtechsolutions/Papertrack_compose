@@ -2,7 +2,6 @@ package `in`.realtechsolns.papertrack
 
 //import `in`.realtechsolns.papertrack.data.User
 
-import androidx.compose.foundation.Image
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
@@ -16,15 +15,13 @@ import papertrack.composeapp.generated.resources.papertrackcompanylogo
 import java.io.File
 import java.util.zip.ZipInputStream
 
-//lateinit var prefs: Preferences
 lateinit var db: AppDatabase
 lateinit var companyDao: CompanyDao
 lateinit var documentRevisionDao : DocumentRevisionDao
 lateinit var documentsFolderDao : DocumentFolderDao
 lateinit var documentSearchDa0 : DocumentSearchDao
-lateinit var contentSearchDa : ContentSearchDao
+lateinit var contentSearchDao : ContentSearchDao
 fun main() {
-
     val scope = CoroutineScope(Dispatchers.IO)
     val title = mutableStateOf("Papertrack")
     scope.launch {
@@ -36,9 +33,9 @@ fun main() {
         documentRevisionDao = db.documentRevisionDao()
         documentsFolderDao = db.documentsFolderDao()
         documentSearchDa0 = db.documentSearchDao()
-        contentSearchDa = db.contentSearchDao()
+        contentSearchDao = db.contentSearchDao()
 
-            //companyDao.insert(CompanyInfo(name = "ABC Ltd", address = "999 Industrial area", contactNo = "99999"))
+            companyDao.insert(CompanyInfo(name = "ABC Ltd", address = "999 Industrial area", contactNo = "99999"))
             //val company  = companyDao.getAll()
            // println(company)
         copyFolderToUserSystem("Docs","Papertracks/Docs")
@@ -46,9 +43,6 @@ fun main() {
         //title.value = companyDao.getAll().first().name
         //copyDocsUserSystem()
     }
-
-    //prefs = Preferences.userRoot().node("MyAppPreferences")
-    //LuceneManager.initialize()
 
 
     application {
@@ -63,6 +57,7 @@ fun main() {
                    onExit = ::exitApplication
                )
             App()
+
         }
     }
 }
