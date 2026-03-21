@@ -2,7 +2,10 @@ package `in`.realtechsolns.papertrack
 
 //import `in`.realtechsolns.papertrack.data.User
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import `in`.realtechsolns.papertrack.data.*
@@ -17,10 +20,10 @@ import java.util.zip.ZipInputStream
 
 lateinit var db: AppDatabase
 lateinit var companyDao: CompanyDao
-lateinit var documentRevisionDao : DocumentRevisionDao
-lateinit var documentsFolderDao : DocumentFolderDao
-lateinit var documentSearchDa0 : DocumentSearchDao
-lateinit var contentSearchDao : ContentSearchDao
+lateinit var documentRevisionDao: DocumentRevisionDao
+lateinit var documentsFolderDao: DocumentFolderDao
+lateinit var documentSearchDa0: DocumentSearchDao
+lateinit var contentSearchDao: ContentSearchDao
 fun main() {
     val scope = CoroutineScope(Dispatchers.IO)
     val title = mutableStateOf("Papertrack")
@@ -29,34 +32,43 @@ fun main() {
             .fallbackToDestructiveMigration(true)
             .build()
 
-         companyDao = db.companyDao()
+        companyDao = db.companyDao()
         documentRevisionDao = db.documentRevisionDao()
         documentsFolderDao = db.documentsFolderDao()
         documentSearchDa0 = db.documentSearchDao()
         contentSearchDao = db.contentSearchDao()
+        val existing = companyDao.getAll()
+        if (existing.isEmpty()) {
+            companyDao.insert(
+                CompanyInfo(
+                    name = "ABC Ltd",
+                    address = "999 Industrial area",
+                    contactNo = "99999"
+                )
+            )
+        }
 
-            companyDao.insert(CompanyInfo(name = "ABC Ltd", address = "999 Industrial area", contactNo = "99999"))
-            //val company  = companyDao.getAll()
-           // println(company)
-        copyFolderToUserSystem("Docs","Papertracks/Docs")
-        copyFolderToUserSystem("orgChart","Papertracks/orgChart")
-        //title.value = companyDao.getAll().first().name
-        //copyDocsUserSystem()
+       // companyDao.insert(CompanyInfo(name = "ABC Ltd", address = "999 Industrial area", contactNo = "99999"))
+        copyFolderToUserSystem("Docs", "Papertracks/Docs")
+        copyFolderToUserSystem("orgChart", "Papertracks/orgChart")
+        title.value  = companyDao.getAll().first().name
+        //println(title.value)
     }
-
-
     application {
         Window(
             onCloseRequest = ::exitApplication,
-            title = "Papertrack",
+            title = title.value,
             icon = painterResource(Res.drawable.papertrackcompanylogo)
         ) {
-               AppMenuBar(
-                   onFolderOpen = { /* logic */ },
-                   onRefresh = { /* logic */ },
-                   onExit = ::exitApplication
-               )
+            var showHelp by remember { mutableStateOf(false) }
+            AppMenuBar(
+                onFolderOpen = { /* logic */ },
+                onRefresh = { /* logic */ },
+                onExit = ::exitApplication,
+                onClick = { showHelp = !showHelp }
+            )
             App()
+            if (showHelp) {showHelp {showHelp =!showHelp } }
 
         }
     }
@@ -91,7 +103,7 @@ suspend fun copyFolderToUserSystem(folderName: String, targetSubPath: String) {
                 entry = zis.nextEntry
             }
         }
-       // println("Deployment successful to: ${targetDir.absolutePath}")
+        // println("Deployment successful to: ${targetDir.absolutePath}")
     } catch (e: Exception) {
         e.printStackTrace()
     }

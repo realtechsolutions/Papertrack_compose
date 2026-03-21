@@ -19,7 +19,7 @@ import javax.swing.JOptionPane
 
 @Composable
 fun FrameWindowScope.AppMenuBar(
-
+    onClick: () -> Unit,
     onFolderOpen: () -> Unit,
     onRefresh: () -> Unit,
     onExit: () -> Unit
@@ -28,7 +28,6 @@ fun FrameWindowScope.AppMenuBar(
     val scope = rememberCoroutineScope()
     var showCompanyDataInput by remember { mutableStateOf(false) }
     var showSearchResult by remember { mutableStateOf(false) }
-   // var showLoader by remember { mutableStateOf(false) }
     val inputs = remember { mutableStateListOf("", "", "") }
     val labels = remember { mutableStateListOf<String>("Name", "Address", "Phone Number") }
     var fileSearchResults by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -46,13 +45,11 @@ fun FrameWindowScope.AppMenuBar(
                     val userfolderpath = listfoldertoShow[0].userFolder
                     val userFolder = File(userfolderpath)
                     folder.value = userFolder
-
                 }
             })
             Separator()
             Item("Use default sample documents", onClick = {
                 folder.value = File(userHome, "Papertracks/Docs/Docs")
-
             })
         }
 
@@ -70,21 +67,17 @@ fun FrameWindowScope.AppMenuBar(
 
         Menu(" Search   ") {
             Item("Add your documents for search", onClick = {
-                //LuceneManager.reinitialize()
                 scope.launch {
                     showLoaderSearchFiles.value =!showLoaderSearchFiles.value
                     withContext(Dispatchers.IO){
                         val documentSearchItemsList = getAllDocxContents(folder.value.absolutePath)
                         documentSearchDa0.deleteAll()
                         documentSearchDa0.insertDocumentSearchItems(documentSearchItemsList)
-
                     }
-
 
               // println(" debugging $documentSearchItemsList")
                 showLoaderSearchFiles.value = !showLoaderSearchFiles.value
                 }
-
             })
             Item("Search by document no.", onClick = {
               val userQuery = JOptionPane.showInputDialog("Enter document Number to search")
@@ -130,11 +123,19 @@ fun FrameWindowScope.AppMenuBar(
         }
 
         Menu(" Help     ") {
-            Item("""<html>Note:Documents must have header with Revision Number: and Revision Date <br>
-              After adding your document folder,add documents to search by clicking add updated documents to search
-                  </html>  """, onClick = { })
-            Item("Help2", onClick = onRefresh)
+            Item(text = "View Help" , onClick = onClick
+
+
+            )
+//            Item("""<html>Note:Documents must have header with Revision Number: and Revision Date <br>
+//              After adding your document folder,add documents to search by clicking add updated documents to search
+//                  </html>  """, onClick = { })
+//            Item("Help2", onClick = onRefresh)
         }
+
+
+
+
 
 //        Menu("Ask questions ") {
 //            Item("Add updated document to search", onClick = {LuceneManager.reinitialize()})
@@ -174,9 +175,10 @@ fun FrameWindowScope.AppMenuBar(
 
                 }
                 Button(onClick = {
-
                     scope.launch {
+
                         val companyData = CompanyInfo(name = inputs[0], address = inputs[1], contactNo = inputs[2])
+                       companyDao.deleteAll()
                         companyDao.insert(companyData)
                         // inputs.fill("")
                         showCompanyDataInput = false
