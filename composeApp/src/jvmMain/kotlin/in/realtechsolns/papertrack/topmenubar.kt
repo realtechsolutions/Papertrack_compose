@@ -34,9 +34,8 @@ fun FrameWindowScope.AppMenuBar(
 
     MenuBar {
         Menu(" Documents    ", mnemonic = 'F') {
-            Item(" Add your documents folder and  refresh ", onClick = {
+            Item(" Add your documents folder ", onClick = {
                 val userFolder = openFolderPicker()
-                // println("Opening $userFolder")
                 scope.launch {
                     userFolder?.let { documentsFolderDao.save(DocumentsFolder(userFolder = it)) }
                     val listfoldertoShow = documentsFolderDao
@@ -115,49 +114,15 @@ fun FrameWindowScope.AppMenuBar(
                //println   (contentSearchDao.getFileNamesByText(userQuery))
                  fileSearchResults =  contentSearchDao.getFileNamesByText(userQuery)
                   showSearchResult = !showSearchResult
-
               }
-
-
             })
         }
 
         Menu(" Help     ") {
             Item(text = "View Help" , onClick = onClick
 
-
             )
-//            Item("""<html>Note:Documents must have header with Revision Number: and Revision Date <br>
-//              After adding your document folder,add documents to search by clicking add updated documents to search
-//                  </html>  """, onClick = { })
-//            Item("Help2", onClick = onRefresh)
         }
-
-
-
-
-
-//        Menu("Ask questions ") {
-//            Item("Add updated document to search", onClick = {LuceneManager.reinitialize()})
-//            Item("Search for document number", onClick = {
-//                val query: Query = LuceneManager.docNoParser.parse(JOptionPane.showInputDialog("Enter document no.:"))
-//                val results = LuceneManager.searcher.search(query, 10)
-//                showSearchResults(results)
-//
-//            })
-//            Item("search for file name", onClick = onRefresh)
-//            Item("Search for Revision number", onClick = onRefresh)
-//            Item("Search for revision date ", onClick = onRefresh)
-//            Item("Search for text", onClick = {
-//
-//                val userInput = JOptionPane.showInputDialog("Enter your search query:")
-//                val query = LuceneManager.textParser.parse(userInput)
-//                val results = LuceneManager.searcher.search(query, 10)
-//                showSearchResults(results)
-//            })
-//
-//        }
-
     }
 
     if (showCompanyDataInput) {

@@ -7,9 +7,7 @@ plugins {
     alias(libs.plugins.composeHotReload)
     alias(libs.plugins.ksp)
     alias(libs.plugins.androidx.room)
-
 }
-
 kotlin {
     jvm()
     
@@ -28,14 +26,6 @@ kotlin {
             implementation(libs.poi.core)
             implementation(libs.poi.ooxml)
             implementation(libs.log4j.core)
-            implementation(libs.lucene.core)
-            implementation(libs.lucene.queryparser)
-
-
-
-
-
-
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -56,6 +46,10 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "in.realtechsolns.papertrack"
             packageVersion = "1.0.0"
+        }
+
+        buildTypes.release.proguard {
+            isEnabled.set(false)
         }
     }
 }

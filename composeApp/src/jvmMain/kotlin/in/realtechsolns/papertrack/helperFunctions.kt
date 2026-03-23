@@ -486,11 +486,19 @@ fun showHelp (click :()->Unit){
         title = "Help"
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("• Documents must have header with Revision Number and Revision Date")
-            Text("• After adding your document folder, click 'Add documents to search'")
-            //Button(onClick = { showHelpDialog = false }) {
-               // Text("Close")
-            //}
+            Text(" Add your documents  folder in document menu, click Add  your  documents ")
+            HorizontalDivider()
+            Text ("Add documents to search' in search menu by clicking Add documents to search ")
+            HorizontalDivider()
+            Text(" Documents must have a header with Revision Number, Revision Date,Document No , and Title ")
+            HorizontalDivider()
+            Text (" Documents  folder is shown as a tree view you can open file by clicking it .  ")
+            HorizontalDivider()
+            Text (" You can auto update revision number and revision date by right clicking file and update file.")
+            HorizontalDivider()
+            Text(" You can view revision history and can view previous three revisions. ")
+            HorizontalDivider()
+
         }
     }
 
