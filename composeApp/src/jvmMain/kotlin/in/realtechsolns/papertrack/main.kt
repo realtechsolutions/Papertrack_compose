@@ -2,12 +2,14 @@ package `in`.realtechsolns.papertrack
 
 //import `in`.realtechsolns.papertrack.data.User
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import androidx.room.util.TableInfo
 import `in`.realtechsolns.papertrack.data.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -61,13 +63,21 @@ fun main() {
             icon = painterResource(Res.drawable.papertrackcompanylogo)
         ) {
             var showHelp by remember { mutableStateOf(false) }
+            var showLoader = remember { mutableStateOf(false) }
+
             AppMenuBar(
                 onFolderOpen = { /* logic */ },
                 onRefresh = { /* logic */ },
                 onExit = ::exitApplication,
-                onClick = { showHelp = !showHelp }
+                onClick = { showHelp = !showHelp },
+                showLoader = showLoader
             )
-            App()
+            Column {
+                App()
+                if (showLoader.value) {
+                    showLoader(".... Loading documents for search")
+                }
+            }
             if (showHelp) {showHelp {showHelp =!showHelp } }
 
         }

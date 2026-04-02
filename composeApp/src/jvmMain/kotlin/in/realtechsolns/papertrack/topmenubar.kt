@@ -22,7 +22,8 @@ fun FrameWindowScope.AppMenuBar(
     onClick: () -> Unit,
     onFolderOpen: () -> Unit,
     onRefresh: () -> Unit,
-    onExit: () -> Unit
+    onExit: () -> Unit,
+    showLoader : MutableState<Boolean>
 ) {
 
     val scope = rememberCoroutineScope()
@@ -64,10 +65,19 @@ fun FrameWindowScope.AppMenuBar(
             Item("Edit ", onClick = { desktop?.open(editOrgChart) })
         }
 
+
+        Menu(text = "Master list documents    "){
+
+           Item(text = "Create/Update Master list", onClick = {})
+           Item(text = "View Master list", onClick = {})
+
+        }
+
         Menu(" Search   ") {
             Item("Add your documents for search", onClick = {
                 scope.launch {
-                    showLoaderSearchFiles.value =!showLoaderSearchFiles.value
+                   // showLoaderSearchFiles.value =!showLoaderSearchFiles.value
+                    showLoader.value = true
                     withContext(Dispatchers.IO){
                         val documentSearchItemsList = getAllDocxContents(folder.value.absolutePath)
                         documentSearchDa0.deleteAll()
@@ -75,7 +85,8 @@ fun FrameWindowScope.AppMenuBar(
                     }
 
               // println(" debugging $documentSearchItemsList")
-                showLoaderSearchFiles.value = !showLoaderSearchFiles.value
+               // showLoaderSearchFiles.value = !showLoaderSearchFiles.value
+                    showLoader.value = false
                 }
             })
             Item("Search by document no.", onClick = {
@@ -123,6 +134,9 @@ fun FrameWindowScope.AppMenuBar(
 
             )
         }
+
+
+
     }
 
     if (showCompanyDataInput) {

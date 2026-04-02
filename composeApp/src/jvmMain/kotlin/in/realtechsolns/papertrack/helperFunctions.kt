@@ -45,6 +45,7 @@ var currentFileName = mutableStateOf("")
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun FileTreeItem(file: File, initialExpanded: Boolean = false, dao: DocumentRevisionDao = documentRevisionDao) {
+    var showFileUpdateLoader = remember { mutableStateOf(false) }
     var isExpanded by remember { mutableStateOf(initialExpanded) }
     val scope = rememberCoroutineScope()
     Column(modifier = Modifier.padding(start = 16.dp)) {
@@ -56,14 +57,13 @@ fun FileTreeItem(file: File, initialExpanded: Boolean = false, dao: DocumentRevi
             DropdownMenuItem(
                 text = { Text("Update File") },
                 onClick = { /* handle */ isMenuVisible = false
-                    updateFile(file)
+                    updateFile(file, showLoader = showFileUpdateLoader,scope=scope)
                 }
             )
             DropdownMenuItem(
                 text = { Text("View revision history") },
                 onClick = {
                     isMenuVisible = false
-
                     scope.launch {
                         isRevHistoryVisible.value = !isRevHistoryVisible.value
                         val revHistory = dao.getFullRevisionHistory(file.name).first()
@@ -144,11 +144,22 @@ fun FileTreeItem(file: File, initialExpanded: Boolean = false, dao: DocumentRevi
                 FileTreeItem(child)
             }
         }
+
+
+        if (showFileUpdateLoader.value){
+
+            showLoader(".... Updating file ")
+        }
     }
+
+
 }
 
-private fun updateFile(file: File, dao: DocumentRevisionDao = documentRevisionDao) {
-    val scope = CoroutineScope(Dispatchers.Default)
+private fun updateFile(file: File, dao: DocumentRevisionDao = documentRevisionDao,showLoader : MutableState<Boolean> ,
+                       scope: CoroutineScope
+
+){
+
     try {
         RandomAccessFile(file, "rw").close()
     } catch (e: IOException) {
@@ -161,91 +172,93 @@ private fun updateFile(file: File, dao: DocumentRevisionDao = documentRevisionDa
         return
     }
     val reason = JOptionPane.showInputDialog(null, "Enter reason for revision")
-    val revNumberRegex = Regex("Revision [Nn]umber: (\\d+)")
-    val revDateRegex = Regex("Revision Date: (\\d{2}[/-]\\d{2}[/-]\\d{4})")
-    var newRevNumber = 1
-    var currentRevNumber = 1
-    val titleRegex = Regex("Title:\\s*(.+)")
-    val documentNoRegex = Regex("Document No\\.?\\s*:?\\s*(.+)")
-    var extractedTitle = ""
-    var extractedDocumentNo = ""
-    var extractedRevDate: String = ""
-
+    showLoader.value = true
+        val revNumberRegex = Regex("Revision [Nn]umber: (\\d+)")
+        val revDateRegex = Regex("Revision Date: (\\d{2}[/-]\\d{2}[/-]\\d{4})")
+        var newRevNumber = 1
+        var currentRevNumber = 1
+        val titleRegex = Regex("Title:\\s*(.+)")
+        val documentNoRegex = Regex("Document No\\.?\\s*:?\\s*(.+)")
+        var extractedTitle = ""
+        var extractedDocumentNo = ""
+        var extractedRevDate: String = ""
+    scope.launch(Dispatchers.IO) {
 // ✅ Set name first
-    val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
-    val timestamp = LocalDateTime.now().format(formatter)
-    val currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-    val obsoleteFileName = "${file.nameWithoutExtension}_$timestamp.docx"
-    val obsoleteFile = File(userHome, "obsoleteDocs/$obsoleteFileName")
-    try {
-        file.copyTo(obsoleteFile, overwrite = true)
-        println("✅ copy succeeded, size = ${obsoleteFile.length()}")
-    } catch (e: Exception) {
-        println("❌ copy FAILED: ${e::class.simpleName}: ${e.message}")
-        e.printStackTrace()
-    }
-
-    FileInputStream(file).use { inStream ->
-        val doc = XWPFDocument(inStream)
-        val header = doc.headerFooterPolicy?.defaultHeader ?: return
-        for (paragraph in header.paragraphs) {
-            val fullText = paragraph.text // Simpler way to get text
-            revNumberRegex.find(fullText)?.let { currentRevNumber = it.groupValues[1].toIntOrNull() ?: 0 }
-            titleRegex.find(fullText)?.let { extractedTitle = it.groupValues[1].trim() }
-            documentNoRegex.find(fullText)?.let { extractedDocumentNo = it.groupValues[1].trim() }
-            // CAPTURE THE OLD DATE HERE BEFORE REPLACING IT
-            revDateRegex.find(fullText)?.let { extractedRevDate = it.groupValues[1].trim() }
+        val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
+        val timestamp = LocalDateTime.now().format(formatter)
+        val currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+        val obsoleteFileName = "${file.nameWithoutExtension}_$timestamp.docx"
+        val obsoleteFile = File(userHome, "obsoleteDocs/$obsoleteFileName")
+        try {
+            file.copyTo(obsoleteFile, overwrite = true)
+            println("✅ copy succeeded, size = ${obsoleteFile.length()}")
+        } catch (e: Exception) {
+            println("❌ copy FAILED: ${e::class.simpleName}: ${e.message}")
+            e.printStackTrace()
         }
-        newRevNumber = currentRevNumber + 1
+
+        FileInputStream(file).use { inStream ->
+            val doc = XWPFDocument(inStream)
+            val header = doc.headerFooterPolicy?.defaultHeader ?: return@launch
+            for (paragraph in header.paragraphs) {
+                val fullText = paragraph.text // Simpler way to get text
+                revNumberRegex.find(fullText)?.let { currentRevNumber = it.groupValues[1].toIntOrNull() ?: 0 }
+                titleRegex.find(fullText)?.let { extractedTitle = it.groupValues[1].trim() }
+                documentNoRegex.find(fullText)?.let { extractedDocumentNo = it.groupValues[1].trim() }
+                // CAPTURE THE OLD DATE HERE BEFORE REPLACING IT
+                revDateRegex.find(fullText)?.let { extractedRevDate = it.groupValues[1].trim() }
+            }
+            newRevNumber = currentRevNumber + 1
 
 // 2. SECOND PASS: Update the header with NEW info
-        for (paragraph in header.paragraphs) {
-            val runs = paragraph.runs
-            if (runs.isEmpty()) continue
-            val fullText = runs.joinToString("") { it.text() }
-            if (fullText.contains("Revision", ignoreCase = true)) {
-                var updatedText = revDateRegex.replace(fullText, "Revision Date: $currentDate")
-                updatedText =
-                    revNumberRegex.replace(updatedText, "Revision Number: ${String.format("%02d", newRevNumber)}")
+            for (paragraph in header.paragraphs) {
+                val runs = paragraph.runs
+                if (runs.isEmpty()) continue
+                val fullText = runs.joinToString("") { it.text() }
+                if (fullText.contains("Revision", ignoreCase = true)) {
+                    var updatedText = revDateRegex.replace(fullText, "Revision Date: $currentDate")
+                    updatedText =
+                        revNumberRegex.replace(updatedText, "Revision Number: ${String.format("%02d", newRevNumber)}")
 
-                runs[0].setText(updatedText, 0)
-                for (i in 1 until runs.size) runs[i].setText("", 0)
+                    runs[0].setText(updatedText, 0)
+                    for (i in 1 until runs.size) runs[i].setText("", 0)
+                }
+            }
+
+            FileOutputStream(file).use { outStream ->
+                doc.write(outStream)
+                doc.close()
             }
         }
-
-        FileOutputStream(file).use { outStream ->
-            doc.write(outStream)
-            doc.close()
-        }
-    }
-    // 2️⃣ Insert into DB
-    scope.launch {
-        dao.insertRevisionInternal(
-            DocumentRevision(
-                documentNo = extractedDocumentNo,
-                revNumber = currentRevNumber,
-                revReason = reason,
-                title = extractedTitle,
-                fileName = file.name,
-                filePath = "$userHome/obsoleteDocs/$obsoleteFileName",
-                revDate = extractedRevDate
+        // 2️⃣ Insert into DB
+       // scope.launch {
+            dao.insertRevisionInternal(
+                DocumentRevision(
+                    documentNo = extractedDocumentNo,
+                    revNumber = currentRevNumber,
+                    revReason = reason,
+                    title = extractedTitle,
+                    fileName = file.name,
+                    filePath = "$userHome/obsoleteDocs/$obsoleteFileName",
+                    revDate = extractedRevDate
+                )
             )
+
+
+            val filesToDelete = dao.getFilePathsToDelete(file.name)
+            //println(filesToDelete)
+            filesToDelete.forEach {
+                val file = File(it)
+                if (file.exists()) file.delete()
+            }
+        showLoader.value = false
+       }
+
+        JOptionPane.showMessageDialog(
+            null, "file updated" +
+                    "with  rev no: $newRevNumber , reason: $reason . Old version also saved "
         )
-
-
-        val filesToDelete = dao.getFilePathsToDelete(file.name)
-        //println(filesToDelete)
-        filesToDelete.forEach {
-            val file = File(it)
-            if (file.exists()) file.delete()
-        }
-    }
-
-    JOptionPane.showMessageDialog(
-        null, "file updated" +
-                "with  rev no: $newRevNumber , reason: $reason . Old version also saved "
-    )
-
+   // }
 }
 
 @Composable
