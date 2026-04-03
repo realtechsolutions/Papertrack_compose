@@ -14,8 +14,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.File
+import java.io.FileOutputStream
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import javax.swing.JOptionPane
+import kotlin.io.path.isDirectory
+import kotlin.io.path.isRegularFile
 
 @Composable
 fun FrameWindowScope.AppMenuBar(
@@ -68,7 +75,64 @@ fun FrameWindowScope.AppMenuBar(
 
         Menu(text = "Master list documents    "){
 
-           Item(text = "Create/Update Master list", onClick = {})
+           Item(text = "Create/Update Master list", onClick = {
+               val masterFilePath = Path.of(userHome,"masterlist.xlsx").toAbsolutePath().toString()
+               println(masterFilePath)
+
+               val pathString = folder.value.absolutePath
+              val path = Path.of(pathString)
+
+               XSSFWorkbook().use { workbook ->
+                   val sheet = workbook.createSheet("Master list")
+                   val headerRow = sheet.createRow(0)
+                   headerRow.createCell(0).setCellValue("SN")
+                   headerRow.createCell(1).setCellValue("File name")
+
+                   var rowIndex = 1
+                   var sn =1
+                   Files.walk(path).use {stream ->
+                    stream.forEach {
+                       val row = sheet.createRow(rowIndex++)
+                        val firstCell = row.createCell(0)
+                        if (it.isDirectory()){firstCell.setCellValue("")}
+                        if (it.isRegularFile()){firstCell.setCellValue(sn.toString())}
+                        //row.createCell(0).setCellValue(sn.toString())
+                        row.createCell(1).setCellValue(it.fileName.toString().removeSuffix(".docx"))
+                        if (it.isRegularFile()){ sn++}
+
+
+
+                    }
+
+                       FileOutputStream(masterFilePath).use {outputStream ->
+                         workbook.write(outputStream)
+
+                       }
+                       println("$masterFilePath exported")
+
+
+
+                   }
+
+
+
+
+
+               }
+
+
+
+//               Files.walk(path).use{stream ->
+//
+//
+//                   stream.forEach {
+//
+//
+//                     println(it.fileName.toString()) }
+//
+//               }
+
+           })
            Item(text = "View Master list", onClick = {})
 
         }

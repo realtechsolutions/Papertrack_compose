@@ -278,7 +278,7 @@ fun showRevisionHistory(dao: DocumentRevisionDao = documentRevisionDao, filename
 
                 // --- DEBUG SECTION ---
                 LaunchedEffect(filename) {
-                    println("UI is querying for: '$filename'")
+                    //println("UI is querying for: '$filename'")
                 }
 
                 if (revHistory.isEmpty()) {
@@ -322,7 +322,7 @@ fun showPreviousVersions(dao: DocumentRevisionDao = documentRevisionDao, filenam
 
                 // --- DEBUG SECTION ---
                 LaunchedEffect(filename) {
-                    println("UI is querying for: '$filename'")
+                   // println("UI is querying for: '$filename'")
                 }
 
                 if (last3Versions.isEmpty()) {
