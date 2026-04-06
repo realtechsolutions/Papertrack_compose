@@ -77,188 +77,189 @@ fun FrameWindowScope.AppMenuBar(
 
         Menu(text = "Master list documents    ") {
 
-            Item(text = "Create/Update Master list", onClick = {
-                val masterFilePath = Path.of(userHome, "masterlist.xlsx").toAbsolutePath().toString()
-                val revNumberRegex = Regex("Revision [Nn]umber: (\\d+)")
-                val revDateRegex = Regex("Revision Date: (\\d{2}[/-]\\d{2}[/-]\\d{4})")
-                val titleRegex = Regex("Title:\\s*(.+)")
-                var title = ""
-                var docNo = ""
-                var revNo = 0
-                var revDate = ""
-                val documentNoRegex = Regex("Document No\\.?\\s*:?\\s*(.+)")
-                val pathString = folder.value.absolutePath
-                val path = Path.of(pathString)
-                XSSFWorkbook().use { workbook ->
-                    val sheet = workbook.createSheet("Master list")
-                    val headerRow = sheet.createRow(0)
-                    headerRow.createCell(0).setCellValue("SN")
-                    headerRow.createCell(1).setCellValue("Doc Number")
-                    headerRow.createCell(2).setCellValue("Document title")
-                    headerRow.createCell(3).setCellValue("Revision No.")
-                    headerRow.createCell(4).setCellValue("Revision Date")
-                    var rowIndex = 1
-                    var sn = 1
-                    Files.walk(path).use { stream ->
-                        stream.forEach {
-                            val row = sheet.createRow(rowIndex++)
-                            val firstCell = row.createCell(0)
-                            Files.newInputStream(it).use { stream ->
-                                val doc = XWPFDocument(stream)
-                                val header = doc.headerFooterPolicy?.defaultHeader ?: return@forEach
-                                for (paragraph in header.paragraphs) {
-                                    val fullText = paragraph.text // Simpler way to get text
-                                    revNumberRegex.find(fullText)?.let { revNo = it.groupValues[1].toIntOrNull() ?: 0 }
-                                    titleRegex.find(fullText)?.let { title = it.groupValues[1].trim() }
-                                    documentNoRegex.find(fullText)?.let { docNo = it.groupValues[1].trim() }
-                                    // CAPTURE THE OLD DATE HERE BEFORE REPLACING IT
-                                    revDateRegex.find(fullText)?.let { revDate = it.groupValues[1].trim() }
-                                }
-                                if (it.isDirectory()) {
-                                    firstCell.setCellValue("")
-                                    row.createCell(1).setCellValue(it.fileName.toString())
-                                }
-                                if (it.isRegularFile()) {
-                                    firstCell.setCellValue(sn.toString())
-                                    row.createCell(1).setCellValue(docNo)
-                                    row.createCell(2).setCellValue(title)
-                                    row.createCell(3).setCellValue(revNo.toString())
-                                    row.createCell(4).setCellValue(revDate)
-                                }
-                                //row.createCell(0).setCellValue(sn.toString())
-                                //row.createCell(1).setCellValue(it.fileName.toString().removeSuffix(".docx"))
 
-
-                                if (it.isRegularFile()) {
-                                    sn++
-                                }
-                            }
-
-                            FileOutputStream(masterFilePath).use { outputStream ->
-                                workbook.write(outputStream)
-
-                            }
-                            println("$masterFilePath exported")
-
-
-                        }
-
-
-                    }
-
-                }
-            }
+            Item(
+                text = "Create/Update Master list", onClick = createMasterList()
             )
-                Item(text = "View Master list", onClick = {
-                    val masterFilePath = Path.of(userHome, "masterlist.xlsx").toAbsolutePath().toString()
-                    desktop?.open(File(masterFilePath))
-                })
-
-            }
-
-                    Menu (" Search   ") {
-                Item("Add your documents for search", onClick = {
-                    scope.launch {
-                        // showLoaderSearchFiles.value =!showLoaderSearchFiles.value
-                        showLoader.value = true
-                        withContext(Dispatchers.IO) {
-                            val documentSearchItemsList = getAllDocxContents(folder.value.absolutePath)
-                            documentSearchDa0.deleteAll()
-                            documentSearchDa0.insertDocumentSearchItems(documentSearchItemsList)
-                        }
-
-                        // println(" debugging $documentSearchItemsList")
-                        // showLoaderSearchFiles.value = !showLoaderSearchFiles.value
-                        showLoader.value = false
-                    }
-                })
-                Item("Search by document no.", onClick = {
-                    val userQuery = JOptionPane.showInputDialog("Enter document Number to search")
-                    scope.launch {
-                        fileSearchResults = documentSearchDa0.getFilePathsFlexible(userQuery)
-                    }
-                    showSearchResult = !showSearchResult
-                })
-                Item("Search by revision no.", onClick = {
-                    val userQuery = JOptionPane.showInputDialog("Enter revision Number to search")
-                    scope.launch {
-                        fileSearchResults = documentSearchDa0.getFilePathsFlexible(revNo = userQuery.toInt())
-                    }
-                    showSearchResult = !showSearchResult
-
-                })
-                Item("Search by document title", onClick = {
-                    val userQuery = JOptionPane.showInputDialog("Enter title to search")
-                    scope.launch {
-                        fileSearchResults = documentSearchDa0.getFilePathsFlexible(title = userQuery)
-                    }
-                    showSearchResult = !showSearchResult
-                })
-
-                Item("Search by revision date.", onClick = {
-                    val userQuery = JOptionPane.showInputDialog("Enter revision date to search")
-                    scope.launch {
-                        fileSearchResults = documentSearchDa0.getFilePathsFlexible(revDate = userQuery)
-                    }
-                    showSearchResult = !showSearchResult
-
-                })
-
-                Item("Search by text", onClick = {
-
-                    val userQuery = JOptionPane.showInputDialog("Enter text to search")
-                    scope.launch {
-                        //println   (contentSearchDa.searchByText(userQuery))
-                        //println   (contentSearchDao.getFileNamesByText(userQuery))
-                        fileSearchResults = contentSearchDao.getFileNamesByText(userQuery)
-                        showSearchResult = !showSearchResult
-                    }
-                })
-            }
-
-                    Menu (" Help     ") {
-                Item(
-                    text = "View Help", onClick = onClick
-
-                )
-            }
-
+            Item(text = "View Master list", onClick = {
+                val masterFilePath = Path.of(userHome, "masterlist.xlsx").toAbsolutePath().toString()
+                desktop?.open(File(masterFilePath))
+            })
 
         }
 
-        if (showCompanyDataInput) {
-            DialogWindow(onCloseRequest = { showCompanyDataInput = false }, title = "Add company info.") {
-
-                Column {
-                    inputs.forEachIndexed { index, value ->
-                        OutlinedTextField(
-                            value = value,
-                            onValueChange = {
-                                inputs[index] = it
-                            },
-                            label = { Text(labels[index]) },
-                        )
-
+        Menu(" Search   ") {
+            Item("Add your documents for search", onClick = {
+                scope.launch {
+                    // showLoaderSearchFiles.value =!showLoaderSearchFiles.value
+                    showLoader.value = true
+                    withContext(Dispatchers.IO) {
+                        val documentSearchItemsList = getAllDocxContents(folder.value.absolutePath)
+                        documentSearchDa0.deleteAll()
+                        documentSearchDa0.insertDocumentSearchItems(documentSearchItemsList)
                     }
-                    Button(onClick = {
-                        scope.launch {
 
-                            val companyData = CompanyInfo(name = inputs[0], address = inputs[1], contactNo = inputs[2])
-                            companyDao.deleteAll()
-                            companyDao.insert(companyData)
-                            // inputs.fill("")
-                            showCompanyDataInput = false
+                    // println(" debugging $documentSearchItemsList")
+                    // showLoaderSearchFiles.value = !showLoaderSearchFiles.value
+                    showLoader.value = false
+                }
+            })
+            Item("Search by document no.", onClick = {
+                val userQuery = JOptionPane.showInputDialog("Enter document Number to search")
+                scope.launch {
+                    fileSearchResults = documentSearchDa0.getFilePathsFlexible(userQuery)
+                }
+                showSearchResult = !showSearchResult
+            })
+            Item("Search by revision no.", onClick = {
+                val userQuery = JOptionPane.showInputDialog("Enter revision Number to search")
+                scope.launch {
+                    fileSearchResults = documentSearchDa0.getFilePathsFlexible(revNo = userQuery.toInt())
+                }
+                showSearchResult = !showSearchResult
+
+            })
+            Item("Search by document title", onClick = {
+                val userQuery = JOptionPane.showInputDialog("Enter title to search")
+                scope.launch {
+                    fileSearchResults = documentSearchDa0.getFilePathsFlexible(title = userQuery)
+                }
+                showSearchResult = !showSearchResult
+            })
+
+            Item("Search by revision date.", onClick = {
+                val userQuery = JOptionPane.showInputDialog("Enter revision date to search")
+                scope.launch {
+                    fileSearchResults = documentSearchDa0.getFilePathsFlexible(revDate = userQuery)
+                }
+                showSearchResult = !showSearchResult
+
+            })
+
+            Item("Search by text", onClick = {
+
+                val userQuery = JOptionPane.showInputDialog("Enter text to search")
+                scope.launch {
+                    //println   (contentSearchDa.searchByText(userQuery))
+                    //println   (contentSearchDao.getFileNamesByText(userQuery))
+                    fileSearchResults = contentSearchDao.getFileNamesByText(userQuery)
+                    showSearchResult = !showSearchResult
+                }
+            })
+        }
+
+        Menu(" Help     ") {
+            Item(
+                text = "View Help", onClick = onClick
+
+            )
+        }
+
+
+    }
+
+    if (showCompanyDataInput) {
+        DialogWindow(onCloseRequest = { showCompanyDataInput = false }, title = "Add company info.") {
+
+            Column {
+                inputs.forEachIndexed { index, value ->
+                    OutlinedTextField(
+                        value = value,
+                        onValueChange = {
+                            inputs[index] = it
+                        },
+                        label = { Text(labels[index]) },
+                    )
+
+                }
+                Button(onClick = {
+                    scope.launch {
+
+                        val companyData = CompanyInfo(name = inputs[0], address = inputs[1], contactNo = inputs[2])
+                        companyDao.deleteAll()
+                        companyDao.insert(companyData)
+                        // inputs.fill("")
+                        showCompanyDataInput = false
+                    }
+                }) { Text("Save data") }
+            }
+
+        }
+    }
+
+
+    if (showSearchResult) {
+        DialogWindow(onCloseRequest = { showSearchResult = false }, title = "Search results") {
+            FileListTextSearch(fileSearchResults)
+        }
+    }
+}
+
+fun createMasterList(): () -> Unit = {
+    val masterFilePath = Path.of(userHome, "masterlist.xlsx").toAbsolutePath().toString()
+    val revNumberRegex = Regex("Revision [Nn]umber: (\\d+)")
+    val revDateRegex = Regex("Revision Date: (\\d{2}[/-]\\d{2}[/-]\\d{4})")
+    val titleRegex = Regex("Title:\\s*(.+)")
+    var title = ""
+    var docNo = ""
+    var revNo = 0
+    var revDate = ""
+    val documentNoRegex = Regex("Document No\\.?\\s*:?\\s*(.+)")
+    val pathString = folder.value.absolutePath
+    val path = Path.of(pathString)
+    XSSFWorkbook().use { workbook ->
+        val sheet = workbook.createSheet("Master list")
+        val headerRow = sheet.createRow(0)
+        headerRow.createCell(0).setCellValue("SN")
+        headerRow.createCell(1).setCellValue("Doc Number")
+        headerRow.createCell(2).setCellValue("Document title")
+        headerRow.createCell(3).setCellValue("Revision No.")
+        headerRow.createCell(4).setCellValue("Revision Date")
+        var rowIndex = 1
+        var sn = 1
+        Files.walk(path).use { stream ->
+            stream.forEach {
+                val row = sheet.createRow(rowIndex++)
+                val firstCell = row.createCell(0)
+                if (it.isDirectory()) {
+                    firstCell.setCellValue("")
+                    row.createCell(1).setCellValue(it.fileName.toString())
+                }
+                if (it.isRegularFile() && it.toString().lowercase().endsWith(".docx")) {
+                    Files.newInputStream(it).use { stream ->
+                        val doc = XWPFDocument(stream)
+                        val header = doc.headerFooterPolicy?.defaultHeader ?: return@forEach
+                        for (paragraph in header.paragraphs) {
+                            val fullText = paragraph.text // Simpler way to get text
+                            revNumberRegex.find(fullText)?.let { revNo = it.groupValues[1].toIntOrNull() ?: 0 }
+                            titleRegex.find(fullText)?.let { title = it.groupValues[1].trim() }
+                            documentNoRegex.find(fullText)?.let { docNo = it.groupValues[1].trim() }
+                            // CAPTURE THE OLD DATE HERE BEFORE REPLACING IT
+                            revDateRegex.find(fullText)?.let { revDate = it.groupValues[1].trim() }
                         }
-                    }) { Text("Save data") }
+                        firstCell.setCellValue(sn.toString())
+                        row.createCell(1).setCellValue(docNo)
+                        row.createCell(2).setCellValue(title)
+                        row.createCell(3).setCellValue(revNo.toString())
+                        row.createCell(4).setCellValue(revDate)
+
+                        sn++
+                    }
+                    //row.createCell(0).setCellValue(sn.toString())
+                    //row.createCell(1).setCellValue(it.fileName.toString().removeSuffix(".docx"))
+
+
+//                    if (it.isRegularFile()) {
+//                        sn++
+//                    }
                 }
 
-            }
-        }
+                FileOutputStream(masterFilePath).use { outputStream ->
+                    workbook.write(outputStream)
 
-
-        if (showSearchResult) {
-            DialogWindow(onCloseRequest = { showSearchResult = false }, title = "Search results") {
-                FileListTextSearch(fileSearchResults)
+                }
+                println("$masterFilePath exported")
             }
         }
     }
+}
