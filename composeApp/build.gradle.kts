@@ -46,6 +46,11 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "in.realtechsolns.papertrack"
             packageVersion = "1.0.0"
+
+        linux {
+            iconFile.set(project.file("src/jvmMain/composeResources/drawable/logo.png"))
+        }
+
         }
 
         buildTypes.release.proguard {

@@ -1,7 +1,5 @@
 package `in`.realtechsolns.papertrack
 
-//import `in`.realtechsolns.papertrack.data.User
-
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -9,7 +7,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import androidx.room.util.TableInfo
 import `in`.realtechsolns.papertrack.data.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,7 +30,6 @@ fun main() {
         db = getDatabaseBuilder()
             .fallbackToDestructiveMigration(true)
             .build()
-
         companyDao = db.companyDao()
         documentRevisionDao = db.documentRevisionDao()
         documentsFolderDao = db.documentsFolderDao()
@@ -49,8 +45,6 @@ fun main() {
                 )
             )
         }
-
-       // companyDao.insert(CompanyInfo(name = "ABC Ltd", address = "999 Industrial area", contactNo = "99999"))
         copyFolderToUserSystem("Docs", "Papertracks/Docs")
         copyFolderToUserSystem("orgChart", "Papertracks/orgChart")
         title.value  = companyDao.getAll().first().name
@@ -83,7 +77,6 @@ fun main() {
         }
     }
 }
-
 
 suspend fun copyFolderToUserSystem(folderName: String, targetSubPath: String) {
     val userHome = System.getProperty("user.home")

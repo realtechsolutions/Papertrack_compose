@@ -17,11 +17,9 @@ import kotlinx.coroutines.withContext
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.apache.poi.xwpf.usermodel.XWPFDocument
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import javax.swing.JOptionPane
 import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile
@@ -34,7 +32,6 @@ fun FrameWindowScope.AppMenuBar(
     onExit: () -> Unit,
     showLoader: MutableState<Boolean>
 ) {
-
     val scope = rememberCoroutineScope()
     var showCompanyDataInput by remember { mutableStateOf(false) }
     var showSearchResult by remember { mutableStateOf(false) }
@@ -50,7 +47,6 @@ fun FrameWindowScope.AppMenuBar(
                     userFolder?.let { documentsFolderDao.save(DocumentsFolder(userFolder = it)) }
                     val listfoldertoShow = documentsFolderDao
                         .getAll().first()
-
                     val userfolderpath = listfoldertoShow[0].userFolder
                     val userFolder = File(userfolderpath)
                     folder.value = userFolder
@@ -74,10 +70,7 @@ fun FrameWindowScope.AppMenuBar(
             Item("Edit ", onClick = { desktop?.open(editOrgChart) })
         }
 
-
         Menu(text = "Master list documents    ") {
-
-
             Item(
                 text = "Create/Update Master list", onClick = createMasterList()
             )
@@ -85,7 +78,6 @@ fun FrameWindowScope.AppMenuBar(
                 val masterFilePath = Path.of(userHome, "masterlist.xlsx").toAbsolutePath().toString()
                 desktop?.open(File(masterFilePath))
             })
-
         }
 
         Menu(" Search   ") {
@@ -98,7 +90,6 @@ fun FrameWindowScope.AppMenuBar(
                         documentSearchDa0.deleteAll()
                         documentSearchDa0.insertDocumentSearchItems(documentSearchItemsList)
                     }
-
                     // println(" debugging $documentSearchItemsList")
                     // showLoaderSearchFiles.value = !showLoaderSearchFiles.value
                     showLoader.value = false
@@ -133,15 +124,10 @@ fun FrameWindowScope.AppMenuBar(
                     fileSearchResults = documentSearchDa0.getFilePathsFlexible(revDate = userQuery)
                 }
                 showSearchResult = !showSearchResult
-
             })
-
             Item("Search by text", onClick = {
-
                 val userQuery = JOptionPane.showInputDialog("Enter text to search")
                 scope.launch {
-                    //println   (contentSearchDa.searchByText(userQuery))
-                    //println   (contentSearchDao.getFileNamesByText(userQuery))
                     fileSearchResults = contentSearchDao.getFileNamesByText(userQuery)
                     showSearchResult = !showSearchResult
                 }
@@ -151,16 +137,12 @@ fun FrameWindowScope.AppMenuBar(
         Menu(" Help     ") {
             Item(
                 text = "View Help", onClick = onClick
-
             )
         }
-
-
     }
 
     if (showCompanyDataInput) {
         DialogWindow(onCloseRequest = { showCompanyDataInput = false }, title = "Add company info.") {
-
             Column {
                 inputs.forEachIndexed { index, value ->
                     OutlinedTextField(
@@ -170,24 +152,18 @@ fun FrameWindowScope.AppMenuBar(
                         },
                         label = { Text(labels[index]) },
                     )
-
                 }
                 Button(onClick = {
                     scope.launch {
-
                         val companyData = CompanyInfo(name = inputs[0], address = inputs[1], contactNo = inputs[2])
                         companyDao.deleteAll()
                         companyDao.insert(companyData)
-                        // inputs.fill("")
                         showCompanyDataInput = false
                     }
                 }) { Text("Save data") }
             }
-
         }
     }
-
-
     if (showSearchResult) {
         DialogWindow(onCloseRequest = { showSearchResult = false }, title = "Search results") {
             FileListTextSearch(fileSearchResults)
@@ -242,18 +218,9 @@ fun createMasterList(): () -> Unit = {
                         row.createCell(2).setCellValue(title)
                         row.createCell(3).setCellValue(revNo.toString())
                         row.createCell(4).setCellValue(revDate)
-
                         sn++
                     }
-                    //row.createCell(0).setCellValue(sn.toString())
-                    //row.createCell(1).setCellValue(it.fileName.toString().removeSuffix(".docx"))
-
-
-//                    if (it.isRegularFile()) {
-//                        sn++
-//                    }
                 }
-
                 FileOutputStream(masterFilePath).use { outputStream ->
                     workbook.write(outputStream)
 

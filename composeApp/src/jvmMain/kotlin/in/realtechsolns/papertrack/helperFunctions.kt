@@ -57,7 +57,7 @@ fun FileTreeItem(file: File, initialExpanded: Boolean = false, dao: DocumentRevi
             DropdownMenuItem(
                 text = { Text("Update File") },
                 onClick = { /* handle */ isMenuVisible = false
-                    updateFile(file, showLoader = showFileUpdateLoader,scope=scope)
+                    updateFile(file, showLoader = showFileUpdateLoader, scope = scope)
                 }
             )
             DropdownMenuItem(
@@ -83,7 +83,6 @@ fun FileTreeItem(file: File, initialExpanded: Boolean = false, dao: DocumentRevi
                 onClick = { /* handle */ isMenuVisible = false
                     isPreviousVersionVisible.value = !isPreviousVersionVisible.value
                     currentFileName.value = file.name
-
                 }
             )
         }
@@ -104,9 +103,7 @@ fun FileTreeItem(file: File, initialExpanded: Boolean = false, dao: DocumentRevi
                                 println("Could not open file: ${e.message}")
                             }
                         }
-
                     }
-
                 )
                 .onPointerEvent(PointerEventType.Press) {
                     if (it.buttons.isSecondaryPressed) {
@@ -137,29 +134,24 @@ fun FileTreeItem(file: File, initialExpanded: Boolean = false, dao: DocumentRevi
 
             // Look inside the physical folder on your hard drive
             val children = file.listFiles()
-
             children?.forEach { child ->
                 // This is the magic part: The function calls ITSELF
                 // for every file it found inside.
                 FileTreeItem(child)
             }
         }
-
-
-        if (showFileUpdateLoader.value){
+        if (showFileUpdateLoader.value) {
 
             showLoader(".... Updating file ")
         }
     }
-
-
 }
 
-private fun updateFile(file: File, dao: DocumentRevisionDao = documentRevisionDao,showLoader : MutableState<Boolean> ,
-                       scope: CoroutineScope
+private fun updateFile(
+    file: File, dao: DocumentRevisionDao = documentRevisionDao, showLoader: MutableState<Boolean>,
+    scope: CoroutineScope
 
-){
-
+) {
     try {
         RandomAccessFile(file, "rw").close()
     } catch (e: IOException) {
@@ -173,15 +165,15 @@ private fun updateFile(file: File, dao: DocumentRevisionDao = documentRevisionDa
     }
     val reason = JOptionPane.showInputDialog(null, "Enter reason for revision")
     showLoader.value = true
-        val revNumberRegex = Regex("Revision [Nn]umber: (\\d+)")
-        val revDateRegex = Regex("Revision Date: (\\d{2}[/-]\\d{2}[/-]\\d{4})")
-        var newRevNumber = 1
-        var currentRevNumber = 1
-        val titleRegex = Regex("Title:\\s*(.+)")
-        val documentNoRegex = Regex("Document No\\.?\\s*:?\\s*(.+)")
-        var extractedTitle = ""
-        var extractedDocumentNo = ""
-        var extractedRevDate: String = ""
+    val revNumberRegex = Regex("Revision [Nn]umber: (\\d+)")
+    val revDateRegex = Regex("Revision Date: (\\d{2}[/-]\\d{2}[/-]\\d{4})")
+    var newRevNumber = 1
+    var currentRevNumber = 1
+    val titleRegex = Regex("Title:\\s*(.+)")
+    val documentNoRegex = Regex("Document No\\.?\\s*:?\\s*(.+)")
+    var extractedTitle = ""
+    var extractedDocumentNo = ""
+    var extractedRevDate: String = ""
     scope.launch(Dispatchers.IO) {
 // ✅ Set name first
         val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
@@ -231,34 +223,33 @@ private fun updateFile(file: File, dao: DocumentRevisionDao = documentRevisionDa
             }
         }
         // 2️⃣ Insert into DB
-       // scope.launch {
-            dao.insertRevisionInternal(
-                DocumentRevision(
-                    documentNo = extractedDocumentNo,
-                    revNumber = currentRevNumber,
-                    revReason = reason,
-                    title = extractedTitle,
-                    fileName = file.name,
-                    filePath = "$userHome/obsoleteDocs/$obsoleteFileName",
-                    revDate = extractedRevDate
-                )
+        // scope.launch {
+        dao.insertRevisionInternal(
+            DocumentRevision(
+                documentNo = extractedDocumentNo,
+                revNumber = currentRevNumber,
+                revReason = reason,
+                title = extractedTitle,
+                fileName = file.name,
+                filePath = "$userHome/obsoleteDocs/$obsoleteFileName",
+                revDate = extractedRevDate
             )
-
-
-            val filesToDelete = dao.getFilePathsToDelete(file.name)
-            //println(filesToDelete)
-            filesToDelete.forEach {
-                val file = File(it)
-                if (file.exists()) file.delete()
-            }
-        showLoader.value = false
-       }
-
-        JOptionPane.showMessageDialog(
-            null, "file updated" +
-                    "with  rev no: $newRevNumber , reason: $reason . Old version also saved "
         )
-   // }
+
+
+        val filesToDelete = dao.getFilePathsToDelete(file.name)
+               filesToDelete.forEach {
+            val file = File(it)
+            if (file.exists()) file.delete()
+        }
+        showLoader.value = false
+    }
+
+    JOptionPane.showMessageDialog(
+        null, "file updated" +
+                "with  rev no: $newRevNumber , reason: $reason . Old version also saved "
+    )
+    // }
 }
 
 @Composable
@@ -322,7 +313,7 @@ fun showPreviousVersions(dao: DocumentRevisionDao = documentRevisionDao, filenam
 
                 // --- DEBUG SECTION ---
                 LaunchedEffect(filename) {
-                   // println("UI is querying for: '$filename'")
+                    // println("UI is querying for: '$filename'")
                 }
 
                 if (last3Versions.isEmpty()) {
@@ -402,13 +393,11 @@ fun getAllDocxContents(folderPath: String): List<DocumentSearch> {
                     // revNo = revisionNumber.toInt(),
                     revNo = revisionNumber.toIntOrNull() ?: 0,
                     title = title
-
                 )
                 result.add(listItem)
             }
         }
     }
-
     return result
 }
 
@@ -491,32 +480,27 @@ fun showLoader(name: String) {
 }
 
 
-
 @Composable
-fun showHelp (click :()->Unit){
+fun showHelp(click: () -> Unit) {
     DialogWindow(
-        onCloseRequest = { click()},
+        onCloseRequest = { click() },
         title = "Help"
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(" Add your documents  folder in document menu, click Add  your  documents ")
             HorizontalDivider()
-            Text ("Add documents to search' in search menu by clicking Add documents to search ")
+            Text("Add documents to search' in search menu by clicking Add documents to search ")
             HorizontalDivider()
             Text(" Documents must have a header with Revision Number, Revision Date,Document No , and Title ")
             HorizontalDivider()
-            Text (" Documents  folder is shown as a tree view you can open file by clicking it .  ")
+            Text(" Documents  folder is shown as a tree view you can open file by clicking it .  ")
             HorizontalDivider()
-            Text (" You can auto update revision number and revision date by right clicking file and update file.")
+            Text(" You can auto update revision number and revision date by right clicking file and update file.")
             HorizontalDivider()
             Text(" You can view revision history and can view previous three revisions. ")
             HorizontalDivider()
-
         }
     }
-
-
-
 }
 
 

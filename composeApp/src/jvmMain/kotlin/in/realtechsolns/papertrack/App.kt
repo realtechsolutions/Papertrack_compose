@@ -5,19 +5,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 
 
-//var showLoaderSearchFiles = mutableStateOf(false)
+
 @Composable
-//@Preview
 fun App() {
     MaterialTheme {
         Column {
             FileTreeItem(folder.value, true)
             showRevisionHistory(filename = currentFileName.value)
             showPreviousVersions(filename = currentFileName.value)
-//            if (showLoaderSearchFiles.value) {
-//                showLoader("...Loading files for search")
-//            }
-
         }
     }
 }
