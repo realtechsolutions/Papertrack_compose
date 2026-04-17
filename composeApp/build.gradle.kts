@@ -44,7 +44,7 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "in.realtechsolns.papertrack"
+            packageName = "Paper-track"
             packageVersion = "1.0.0"
 
         linux {

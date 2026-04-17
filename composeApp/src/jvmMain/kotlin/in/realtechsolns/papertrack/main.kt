@@ -23,9 +23,11 @@ lateinit var documentRevisionDao: DocumentRevisionDao
 lateinit var documentsFolderDao: DocumentFolderDao
 lateinit var documentSearchDa0: DocumentSearchDao
 lateinit var contentSearchDao: ContentSearchDao
+val customLogoPath = mutableStateOf<String?>(null)
 fun main() {
     val scope = CoroutineScope(Dispatchers.IO)
     val title = mutableStateOf("Papertrack")
+
     scope.launch {
         db = getDatabaseBuilder()
             .fallbackToDestructiveMigration(true)
@@ -54,7 +56,8 @@ fun main() {
         Window(
             onCloseRequest = ::exitApplication,
             title = title.value,
-            icon = painterResource(Res.drawable.papertrackcompanylogo)
+            //icon = painterResource(Res.drawable.papertrackcompanylogo)
+            icon = rememberAppLogo(customLogoPath.value)
         ) {
             var showHelp by remember { mutableStateOf(false) }
             var showLoader = remember { mutableStateOf(false) }

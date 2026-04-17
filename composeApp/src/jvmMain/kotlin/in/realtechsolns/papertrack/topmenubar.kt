@@ -59,7 +59,10 @@ fun FrameWindowScope.AppMenuBar(
         }
 
         Menu(text = "Add company info.") {
-            Item(" Add company logo ", onClick = {})
+            Item(" Add company logo ", onClick = {
+                pickImageFile()?.let { customLogoPath.value = it }
+
+            })
             Separator()
             Item(" Add company data ", onClick = {
                 showCompanyDataInput = !showCompanyDataInput

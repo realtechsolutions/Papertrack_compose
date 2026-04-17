@@ -12,6 +12,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.onPointerEvent
@@ -25,13 +28,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.apache.poi.xwpf.usermodel.XWPFDocument
+import org.jetbrains.compose.resources.painterResource
+import papertrack.composeapp.generated.resources.Res
+import papertrack.composeapp.generated.resources.papertrackcompanylogo
 import java.awt.Desktop
 import java.io.*
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import javax.imageio.ImageIO
 import javax.swing.JFileChooser
 import javax.swing.JOptionPane
+import javax.swing.filechooser.FileNameExtensionFilter
 
 val userHome: String? = System.getProperty("user.home")
 var folder = mutableStateOf(File(userHome, "Papertracks/Docs/Docs"))
@@ -503,7 +511,30 @@ fun showHelp(click: () -> Unit) {
     }
 }
 
+// FilePicker
 
 
+@Composable
+fun rememberAppLogo(logoPath: String?): Painter {
+    return if (logoPath != null && File(logoPath).exists()) {
+        remember(logoPath) {
+            BitmapPainter(ImageIO.read(File(logoPath)).toComposeImageBitmap())
+        }
+    } else {
+        painterResource(Res.drawable.papertrackcompanylogo)
+    }
+}
 
+fun pickImageFile(): String? {
+    var result: String? = null
+        val chooser = JFileChooser().apply {
+            dialogTitle = "Select Logo Image"
+            fileSelectionMode = JFileChooser.FILES_ONLY
+            fileFilter = FileNameExtensionFilter("Image Files", "png", "jpg", "jpeg", "bmp")
+        }
+        result = if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+            chooser.selectedFile.absolutePath
+        } else null
 
+    return result
+}
