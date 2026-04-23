@@ -10,7 +10,7 @@ plugins {
 }
 kotlin {
     jvm()
-    
+
     sourceSets {
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -47,9 +47,12 @@ compose.desktop {
             packageName = "Paper-track"
             packageVersion = "1.0.0"
 
-        linux {
-            iconFile.set(project.file("src/jvmMain/composeResources/drawable/logo.png"))
-        }
+            linux {
+                iconFile.set(project.file("src/jvmMain/composeResources/drawable/logo.png"))
+            }
+            windows {
+                iconFile.set(project.file("src/jvmMain/composeResources/drawable/logo.ico"))
+            }
 
         }
 

@@ -1,0 +1,27 @@
+name: Build distributable
+
+on: push
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          # This helps speed up builds by caching your Gradle dependencies
+          cache: gradle
+
+      - name: Build distributable
+        run: ./gradlew createDistributable
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Papertrack-distributable
+          path: build/compose/binaries/main/app/Papertrack
