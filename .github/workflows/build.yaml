@@ -24,4 +24,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Papertrack-distributable
-          path: composeApp\build\compose\binaries\main\app\
+          path: composeApp\build\compose\binaries\main\app\Paper-track
