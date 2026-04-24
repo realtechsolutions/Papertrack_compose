@@ -109,7 +109,7 @@ suspend fun copyFolderToUserSystem(folderName: String, targetSubPath: String) {
                 entry = zis.nextEntry
             }
         }
-        // println("Deployment successful to: ${targetDir.absolutePath}")
+
     } catch (e: Exception) {
         e.printStackTrace()
     }
