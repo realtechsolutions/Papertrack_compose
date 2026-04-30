@@ -6,7 +6,7 @@ import androidx.room.RoomDatabase
 @Database(
     entities = [ CompanyInfo::class, DocumentRevision::class,DocumentsFolder::class, DocumentSearch::class ,
     ContentSearch::class           ],
-    version = 1
+    version = 2
 )
 abstract class AppDatabase : RoomDatabase() {
 

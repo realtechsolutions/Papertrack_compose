@@ -57,7 +57,7 @@ fun main() {
             onCloseRequest = ::exitApplication,
             title = title.value,
             //icon = painterResource(Res.drawable.papertrackcompanylogo)
-            icon = rememberAppLogo(customLogoPath.value)
+            //icon = rememberAppLogo(customLogoPath.value)
         ) {
             var showHelp by remember { mutableStateOf(false) }
             var showLoader = remember { mutableStateOf(false) }
