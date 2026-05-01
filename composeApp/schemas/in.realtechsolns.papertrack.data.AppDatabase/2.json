@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "f9bb0beb89e4059c318439d98700ab14",
+    "identityHash": "3d294d7c991399422fd1435e29abe61a",
     "entities": [
       {
         "tableName": "CompanyInfo",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `address` TEXT NOT NULL, `contactNo` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `address` TEXT NOT NULL, `contactNo` TEXT NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -34,7 +34,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": true,
+          "autoGenerate": false,
           "columnNames": [
             "id"
           ]
@@ -53,7 +53,7 @@
       },
       {
         "tableName": "DocumentRevision",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `documentNo` TEXT NOT NULL, `revNumber` INTEGER NOT NULL, `revDate` INTEGER NOT NULL, `revReason` TEXT NOT NULL, `title` TEXT NOT NULL, `filePath` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `documentNo` TEXT NOT NULL, `revNumber` INTEGER NOT NULL, `revDate` TEXT NOT NULL, `revReason` TEXT NOT NULL, `title` TEXT NOT NULL, `fileName` TEXT NOT NULL, `filePath` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -76,7 +76,7 @@
           {
             "fieldPath": "revDate",
             "columnName": "revDate",
-            "affinity": "INTEGER",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -88,6 +88,12 @@
           {
             "fieldPath": "title",
             "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fileName",
+            "columnName": "fileName",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -125,11 +131,139 @@
             "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_DocumentRevision_documentNo_revNumber` ON `${TABLE_NAME}` (`documentNo`, `revNumber`)"
           }
         ]
+      },
+      {
+        "tableName": "DocumentsFolder",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `userFolder` TEXT NOT NULL, `defaultFolderPath` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userFolder",
+            "columnName": "userFolder",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultFolderPath",
+            "columnName": "defaultFolderPath",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "DocumentSearch",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `documentNo` TEXT NOT NULL, `title` TEXT NOT NULL, `revNo` INTEGER NOT NULL, `revDate` TEXT NOT NULL, `filePath` TEXT NOT NULL, `content` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "documentNo",
+            "columnName": "documentNo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "revNo",
+            "columnName": "revNo",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "revDate",
+            "columnName": "revDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "filePath",
+            "columnName": "filePath",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "content",
+            "columnName": "content",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_DocumentSearch_filePath",
+            "unique": true,
+            "columnNames": [
+              "filePath"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_DocumentSearch_filePath` ON `${TABLE_NAME}` (`filePath`)"
+          }
+        ]
+      },
+      {
+        "tableName": "ContentSearch",
+        "createSql": "CREATE VIRTUAL TABLE IF NOT EXISTS `${TABLE_NAME}` USING FTS4(`content` TEXT NOT NULL, tokenize=porter, content=`DocumentSearch`)",
+        "fields": [
+          {
+            "fieldPath": "content",
+            "columnName": "content",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": []
+        },
+        "ftsVersion": "FTS4",
+        "ftsOptions": {
+          "tokenizer": "porter",
+          "tokenizerArgs": [],
+          "contentTable": "DocumentSearch",
+          "languageIdColumnName": "",
+          "matchInfo": "FTS4",
+          "notIndexedColumns": [],
+          "prefixSizes": [],
+          "preferredOrder": "ASC"
+        },
+        "contentSyncTriggers": [
+          "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_ContentSearch_BEFORE_UPDATE BEFORE UPDATE ON `DocumentSearch` BEGIN DELETE FROM `ContentSearch` WHERE `docid`=OLD.`rowid`; END",
+          "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_ContentSearch_BEFORE_DELETE BEFORE DELETE ON `DocumentSearch` BEGIN DELETE FROM `ContentSearch` WHERE `docid`=OLD.`rowid`; END",
+          "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_ContentSearch_AFTER_UPDATE AFTER UPDATE ON `DocumentSearch` BEGIN INSERT INTO `ContentSearch`(`docid`, `content`) VALUES (NEW.`rowid`, NEW.`content`); END",
+          "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_ContentSearch_AFTER_INSERT AFTER INSERT ON `DocumentSearch` BEGIN INSERT INTO `ContentSearch`(`docid`, `content`) VALUES (NEW.`rowid`, NEW.`content`); END"
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f9bb0beb89e4059c318439d98700ab14')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3d294d7c991399422fd1435e29abe61a')"
     ]
   }
 }
