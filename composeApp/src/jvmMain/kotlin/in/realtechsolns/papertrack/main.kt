@@ -47,8 +47,8 @@ fun main() {
                 )
             )
         }
-        copyFolderToUserSystem("Docs", "Papertracks/Docs")
-        copyFolderToUserSystem("orgChart", "Papertracks/orgChart")
+        copyFolderToUserSystem("Docs", "Docs")
+        copyFolderToUserSystem("orgChart", "orgChart")
         title.value  = companyDao.getAll().first().name
         //println(title.value)
     }
@@ -83,15 +83,18 @@ fun main() {
 
 suspend fun copyFolderToUserSystem(folderName: String, targetSubPath: String) {
     val userHome = System.getProperty("user.home")
-    val targetDir = File(userHome, targetSubPath)
-    val nestedDir = File(targetDir, "Docs")
-
+    //val targetDir = File(userHome, targetSubPath)
+    val targetDir = File(getDocumentDir(), targetSubPath)
+    //val nestedDir = File(targetDir, "Docs")
+    if (targetDir.exists() && targetDir.list()?.isNotEmpty() == true) {
+        return // Files are already there, skip the unzip!
+    }
     if (!targetDir.exists()) targetDir.mkdirs()
 
     try {
-        if (nestedDir.exists() && nestedDir.list()?.isNotEmpty() == true) {
-            return
-        }
+//        if (nestedDir.exists() && nestedDir.list()?.isNotEmpty() == true) {
+//            return
+      //  }
         val bytes = Res.readBytes("files/$folderName.zip")
         ZipInputStream(bytes.inputStream()).use { zis ->
             var entry = zis.nextEntry

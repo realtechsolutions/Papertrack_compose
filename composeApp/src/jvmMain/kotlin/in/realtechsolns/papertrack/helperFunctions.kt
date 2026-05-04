@@ -42,9 +42,11 @@ import javax.swing.JOptionPane
 import javax.swing.filechooser.FileNameExtensionFilter
 
 val userHome: String? = System.getProperty("user.home")
-var folder = mutableStateOf(File(userHome, "Papertracks/Docs/Docs"))
-val orgChart: File = File(userHome, "Papertracks/orgChart/orgChart/index.html")
-val editOrgChart: File = File(userHome, "Papertracks/orgChart/orgChart/edit.html")
+//var folder = mutableStateOf(File(userHome, "Papertracks/Docs/Docs"))
+var folder = mutableStateOf(File(getDocumentDir(), "Docs/Docs"))
+//val orgChart: File = File(userHome, "Papertracks/orgChart/orgChart/index.html")
+val orgChart: File = File(getDocumentDir(), "orgChart/orgChart/index.html")
+val editOrgChart: File = File(getDocumentDir(), "orgChart/orgChart/edit.html")
 val desktop: Desktop? = Desktop.getDesktop()
 var isRevHistoryVisible = mutableStateOf(false)
 var isPreviousVersionVisible = mutableStateOf(false)
@@ -537,4 +539,12 @@ fun pickImageFile(): String? {
         } else null
 
     return result
+}
+
+fun getDocumentDir() :File{
+    val docsDir = File(System.getenv("APPDATA") ?: System.getProperty("user.home"),"Papertrack")
+    docsDir.mkdirs()
+    return docsDir
+
+
 }
