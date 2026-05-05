@@ -1,19 +1,13 @@
 package `in`.realtechsolns.papertrack
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import `in`.realtechsolns.papertrack.data.*
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.painterResource
+import kotlinx.coroutines.withContext
 import papertrack.composeapp.generated.resources.Res
-import papertrack.composeapp.generated.resources.papertrackcompanylogo
 import java.io.File
 import java.util.zip.ZipInputStream
 
@@ -23,36 +17,75 @@ lateinit var documentRevisionDao: DocumentRevisionDao
 lateinit var documentsFolderDao: DocumentFolderDao
 lateinit var documentSearchDa0: DocumentSearchDao
 lateinit var contentSearchDao: ContentSearchDao
-val customLogoPath = mutableStateOf<String?>(null)
+//val customLogoPath = mutableStateOf<String?>(null)
 fun main() {
-    val scope = CoroutineScope(Dispatchers.IO)
-    val title = mutableStateOf("Papertrack")
+    //val scope = CoroutineScope(Dispatchers.IO)
+    //val title = mutableStateOf("Papertrack")
 
-    scope.launch {
-        db = getDatabaseBuilder()
-            .fallbackToDestructiveMigration(true)
-            .build()
-        companyDao = db.companyDao()
-        documentRevisionDao = db.documentRevisionDao()
-        documentsFolderDao = db.documentsFolderDao()
-        documentSearchDa0 = db.documentSearchDao()
-        contentSearchDao = db.contentSearchDao()
-        val existing = companyDao.getAll()
-        if (existing.isEmpty()) {
-            companyDao.insert(
-                CompanyInfo(
-                    name = "ABC Ltd",
-                    address = "999 Industrial area",
-                    contactNo = "99999"
-                )
-            )
-        }
-        copyFolderToUserSystem("Docs", "Docs")
-        copyFolderToUserSystem("orgChart", "orgChart")
-        title.value  = companyDao.getAll().first().name
-        //println(title.value)
-    }
+//    scope.launch {
+//        db = getDatabaseBuilder()
+//            .fallbackToDestructiveMigration(true)
+//            .build()
+//        companyDao = db.companyDao()
+//        documentRevisionDao = db.documentRevisionDao()
+//        documentsFolderDao = db.documentsFolderDao()
+//        documentSearchDa0 = db.documentSearchDao()
+//        contentSearchDao = db.contentSearchDao()
+//        val existing = companyDao.getAll()
+//        if (existing.isEmpty()) {
+//            companyDao.insert(
+//                CompanyInfo(
+//                    name = "ABC Ltd",
+//                    address = "999 Industrial area",
+//                    contactNo = "99999"
+//                )
+//            )
+//        }
+//        copyFolderToUserSystem("Docs", "Docs")
+//        copyFolderToUserSystem("orgChart", "orgChart")
+//        title.value  = companyDao.getAll().first().name
+//        //println(title.value)
+//    }
     application {
+        var isInitializing by remember { mutableStateOf(true) }
+        val title = remember { mutableStateOf("Papertrack") }
+        LaunchedEffect(Unit) {
+            withContext(Dispatchers.IO) {
+                db = getDatabaseBuilder()
+                    .fallbackToDestructiveMigration(true)
+                    .build()
+                companyDao = db.companyDao()
+                // ... initialize other DAOs ...
+                documentRevisionDao = db.documentRevisionDao()
+                documentsFolderDao = db.documentsFolderDao()
+                documentSearchDa0 = db.documentSearchDao()
+                contentSearchDao = db.contentSearchDao()
+                val existing = companyDao.getAll()
+                if (existing.isEmpty()) {
+                    companyDao.insert(
+                        CompanyInfo(
+                            name = "ABC Ltd",
+                            address = "999 Industrial area",
+                            contactNo = "99999"
+                        )
+                    )
+                }
+
+//                val existing = companyDao.getAll()
+//                if (existing.isEmpty()) {
+//                    companyDao.insert(CompanyInfo(name = "ABC Ltd", address = "999", contactNo = "999"))
+//                }
+
+                copyFolderToUserSystem("Docs", "Docs")
+                copyFolderToUserSystem("orgChart", "orgChart")
+
+                title.value = companyDao.getAll().first().name
+            }
+            // 3. Setup complete! Turn off the loader
+            isInitializing = false
+        }
+
+
         Window(
             onCloseRequest = ::exitApplication,
             title = title.value,
@@ -70,7 +103,11 @@ fun main() {
                 showLoader = showLoader
             )
             Column {
-                App()
+                if (isInitializing) {
+                  showLoader("...Loading Papertrack")
+                } else {App()}
+
+                //App()
                 if (showLoader.value) {
                     showLoader(".... Loading documents for search")
                 }
