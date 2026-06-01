@@ -69,4 +69,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Papertrack-msi
-          path: composeApp\build\compose\binaries\main\msi\Paper-track-1.0.0
+          path: composeApp/build/compose/binaries/main-release/msi/Paper-track-1.0.0.msi
