@@ -60,10 +60,16 @@ jobs:
           java-version: 21
 
       - name: Build MSI
-        run: ./gradlew packageReleaseMsi
+        run: ./gradlew composeApp:packageReleaseMsi
 
+      - name: List MSI directory
+        run: |
+          echo "Contents of msi folder:"
+          dir composeApp\build\compose\binaries\main\msi\
+          echo "Current directory:"
+          dir
 
       - uses: actions/upload-artifact@v4
         with:
           name: Papertrack-msi
-          path: composeApp/build/compose/binaries/main/msi/Paper-track.msi
+          path: composeApp\build\compose\binaries\main\msi\
