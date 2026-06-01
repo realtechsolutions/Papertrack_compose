@@ -60,7 +60,8 @@ jobs:
           java-version: 21
 
       - name: Build MSI
-        run: ./gradlew createMsi
+        run: ./gradlew packageReleaseMsi
+
 
       - uses: actions/upload-artifact@v4
         with:
