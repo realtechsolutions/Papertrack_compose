@@ -65,7 +65,7 @@ jobs:
       - name: List MSI directory
         run: |
           echo "Contents of msi folder:"
-          dir composeApp\build\compose\binaries\main\msi\
+          dir  composeApp\build\ /s /b *.msi
           echo "Current directory:"
           dir
 
