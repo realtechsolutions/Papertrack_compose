@@ -19,7 +19,7 @@ lateinit var documentSearchDa0: DocumentSearchDao
 lateinit var contentSearchDao: ContentSearchDao
 //val customLogoPath = mutableStateOf<String?>(null)
 fun main() {
-    //val scope = CoroutineScope(Dispatchers.IO)
+
     //val title = mutableStateOf("Papertrack")
 
 //    scope.launch {
