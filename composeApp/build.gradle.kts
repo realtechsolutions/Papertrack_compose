@@ -68,3 +68,9 @@ dependencies {
 room {
     schemaDirectory("$projectDir/schemas")
 }
+
+tasks.named<Jar>("jvmJar") {
+    manifest {
+        attributes["Main-Class"] = "in.realtechsolns.papertrack.MainKt"
+    }
+}

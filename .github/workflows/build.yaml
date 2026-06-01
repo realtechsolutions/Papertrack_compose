@@ -1,4 +1,46 @@
-name: Build MSIX
+#name: Build MSIX
+#
+#on:
+#  push:
+#    branches:
+#      - master
+#
+#jobs:
+#  build:
+#    runs-on: windows-2022
+#
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - uses: actions/setup-java@v4
+#        with:
+#          distribution: temurin
+#          java-version: 21
+#
+#      - name: Build distributable
+#        run: ./gradlew createDistributable
+#
+#      - name: Create assets folder and copy logo
+#        run: |
+#          mkdir composeApp\build\compose\binaries\main\app\Paper-track\Assets
+#          Copy-Item composeApp\src\jvmMain\composeResources\drawable\logo.png composeApp\build\compose\binaries\main\app\Paper-track\Assets\StoreLogo.png
+#          Copy-Item composeApp\build\compose\binaries\main\app\Paper-track\Assets\StoreLogo.png composeApp\build\compose\binaries\main\app\Paper-track\Assets\Square150x150Logo.png
+#          Copy-Item composeApp\build\compose\binaries\main\app\Paper-track\Assets\StoreLogo.png composeApp\build\compose\binaries\main\app\Paper-track\Assets\Square44x44Logo.png
+#
+#      - name: Copy manifest
+#        run: Copy-Item AppxManifest.xml composeApp\build\compose\binaries\main\app\Paper-track\
+#
+#      - name: Pack MSIX
+#        run: |
+#          $makeappx = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin" -Recurse -Filter "makeappx.exe" | Select-Object -First 1 -ExpandProperty FullName
+#          & $makeappx pack /d composeApp\build\compose\binaries\main\app\Paper-track /p Papertrack.msix
+#
+#      - uses: actions/upload-artifact@v4
+#        with:
+#          name: Papertrack-msix
+#          path: Papertrack.msix
+
+name: Build MSI
 
 on:
   push:
@@ -17,25 +59,10 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Build distributable
-        run: ./gradlew createDistributable
-
-      - name: Create assets folder and copy logo
-        run: |
-          mkdir composeApp\build\compose\binaries\main\app\Paper-track\Assets
-          Copy-Item composeApp\src\jvmMain\composeResources\drawable\logo.png composeApp\build\compose\binaries\main\app\Paper-track\Assets\StoreLogo.png
-          Copy-Item composeApp\build\compose\binaries\main\app\Paper-track\Assets\StoreLogo.png composeApp\build\compose\binaries\main\app\Paper-track\Assets\Square150x150Logo.png
-          Copy-Item composeApp\build\compose\binaries\main\app\Paper-track\Assets\StoreLogo.png composeApp\build\compose\binaries\main\app\Paper-track\Assets\Square44x44Logo.png
-
-      - name: Copy manifest
-        run: Copy-Item AppxManifest.xml composeApp\build\compose\binaries\main\app\Paper-track\
-
-      - name: Pack MSIX
-        run: |
-          $makeappx = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin" -Recurse -Filter "makeappx.exe" | Select-Object -First 1 -ExpandProperty FullName
-          & $makeappx pack /d composeApp\build\compose\binaries\main\app\Paper-track /p Papertrack.msix
+      - name: Build MSI
+        run: ./gradlew createMsi
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Papertrack-msix
-          path: Papertrack.msix
+          name: Papertrack-msi
+          path: composeApp\build\compose\binaries\main\msi\*.msi
