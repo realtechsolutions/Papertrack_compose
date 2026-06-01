@@ -62,7 +62,9 @@ jobs:
       - name: Build MSI
         run: ./gradlew composeApp:packageReleaseMsi
 
-
+      - name: Find MSI Path
+        run: |
+            Get-ChildItem -Path . -Filter *.msi -Recurse | Select-Object FullName
 
       - uses: actions/upload-artifact@v4
         with:
