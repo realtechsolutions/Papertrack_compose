@@ -51,7 +51,7 @@ compose.desktop {
                 iconFile.set(project.file("src/jvmMain/composeResources/drawable/logo.png"))
             }
             windows {
-                iconFile.set(project.file("src/jvmMain/composeResources/drawable/logo.png"))
+                iconFile.set(project.file("src/jvmMain/composeResources/drawable/logo.ico"))
             }
 
         }
